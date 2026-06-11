@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Select, 
   SelectContent, 
@@ -53,7 +54,6 @@ interface POSProps {
 }
 
 export default function POS({ store, currency, formatMoney, addSale, updateStore, currentUser }: POSProps) {
-  // 1. All hooks must be called unconditionally at the top level
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -97,7 +97,6 @@ export default function POS({ store, currency, formatMoney, addSale, updateStore
     };
   }, [cart, store.config, store.products]);
 
-  // 2. Early return after all hook declarations
   if (!store.config.cashOpening?.isOpen) {
     return <CashOpening config={store.config} updateStore={updateStore} />;
   }
