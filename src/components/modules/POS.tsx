@@ -53,6 +53,7 @@ interface POSProps {
 }
 
 export default function POS({ store, currency, formatMoney, addSale, updateStore, currentUser }: POSProps) {
+  // 1. All hooks must be called unconditionally at the top level
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -65,10 +66,6 @@ export default function POS({ store, currency, formatMoney, addSale, updateStore
     return () => clearInterval(timer);
   }, []);
 
-  if (!store.config.cashOpening?.isOpen) {
-    return <CashOpening config={store.config} updateStore={updateStore} />;
-  }
-
   const filteredProducts = useMemo(() => {
     if (searchTerm.length < 2) return [];
     return store.products.filter(p => 
@@ -76,6 +73,34 @@ export default function POS({ store, currency, formatMoney, addSale, updateStore
       p.code.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [store.products, searchTerm]);
+
+  const totals = useMemo(() => {
+    let subtotalVES = 0;
+    let subtotalUSD = 0;
+    cart.forEach(item => {
+      subtotalVES += item.priceVES * item.quantity;
+      subtotalUSD += item.priceUSD * item.quantity;
+    });
+    const ivaVES = cart.reduce((acc, item) => {
+      const p = store.products.find(prod => prod.id === item.productId);
+      if (p?.appliesIva) {
+        return acc + (item.priceVES * item.quantity * (p.ivaPercent / 100));
+      }
+      return acc;
+    }, 0);
+    
+    return {
+      subtotal: subtotalVES,
+      subtotalUSD,
+      iva: ivaVES,
+      total: subtotalVES + ivaVES
+    };
+  }, [cart, store.config, store.products]);
+
+  // 2. Early return after all hook declarations
+  if (!store.config.cashOpening?.isOpen) {
+    return <CashOpening config={store.config} updateStore={updateStore} />;
+  }
 
   const addToCart = (product: Product) => {
     if (product.stock <= 0) return;
@@ -131,29 +156,6 @@ export default function POS({ store, currency, formatMoney, addSale, updateStore
     }));
   };
 
-  const totals = useMemo(() => {
-    let subtotalVES = 0;
-    let subtotalUSD = 0;
-    cart.forEach(item => {
-      subtotalVES += item.priceVES * item.quantity;
-      subtotalUSD += item.priceUSD * item.quantity;
-    });
-    const ivaVES = cart.reduce((acc, item) => {
-      const p = store.products.find(prod => prod.id === item.productId);
-      if (p?.appliesIva) {
-        return acc + (item.priceVES * item.quantity * (p.ivaPercent / 100));
-      }
-      return acc;
-    }, 0);
-    
-    return {
-      subtotal: subtotalVES,
-      subtotalUSD,
-      iva: ivaVES,
-      total: subtotalVES + ivaVES
-    };
-  }, [cart, store.config, store.products]);
-
   const handleCheckout = (payments: PaymentEntry[]) => {
     const newSale: Sale = {
       id: store.sales.length + 1,
@@ -161,7 +163,7 @@ export default function POS({ store, currency, formatMoney, addSale, updateStore
       items: [...cart],
       subtotal: totals.subtotal,
       iva: totals.iva,
-      igtf: 0, // Calculated in payment calculator if needed
+      igtf: 0,
       total: totals.total,
       payments: payments,
       cashier: currentUser.fullName,
@@ -175,7 +177,6 @@ export default function POS({ store, currency, formatMoney, addSale, updateStore
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)] animate-in fade-in duration-500 relative">
-      {/* Left Column (1/3) - Actions & Comandas */}
       <div className="w-full lg:w-1/3 flex flex-col gap-4">
         <Card className="p-6 border-none shadow-sm space-y-4 bg-[#0a1628] text-white rounded-2xl">
           <div className="flex items-center justify-between mb-4">
@@ -236,9 +237,7 @@ export default function POS({ store, currency, formatMoney, addSale, updateStore
         </Card>
       </div>
 
-      {/* Right Column (2/3) - Smart Search & Cart */}
       <div className="flex-1 flex flex-col gap-4">
-        {/* Smart Search Bar */}
         <div className="relative z-[60]">
           <div className="relative group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-[#c9a227] transition-colors" />
@@ -290,7 +289,6 @@ export default function POS({ store, currency, formatMoney, addSale, updateStore
           )}
         </div>
 
-        {/* Cart Table (Enhanced) */}
         <Card className="flex-1 flex flex-col bg-white rounded-2xl border shadow-sm overflow-hidden">
           <div className="bg-[#0a1628] text-white p-5 flex items-center gap-3">
             <ShoppingCart className="w-5 h-5 text-[#c9a227]" />
