@@ -7,11 +7,25 @@ import Login from '@/components/modules/Login';
 import Dashboard from '@/components/modules/Dashboard';
 import POS from '@/components/modules/POS';
 import Reports from '@/components/modules/Reports';
-// Simple list views for other modules
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Plus, Boxes, Tags, Users as UsersIcon, FileText, Settings, UserRound } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { 
+  Plus, 
+  Package, 
+  Tags, 
+  Users as UsersIcon, 
+  FileText, 
+  Shield, 
+  Settings, 
+  CheckCircle,
+  Clock,
+  LayoutDashboard,
+  Search,
+  Filter,
+  ArrowRight
+} from 'lucide-react';
 
 export default function HomePage() {
   const {
@@ -42,7 +56,6 @@ export default function HomePage() {
       case 'reports':
         return <Reports store={store} formatMoney={formatMoney} />;
       
-      // Basic views for other modules to complete the app structure
       case 'products':
         return (
           <div className="space-y-6">
@@ -150,7 +163,9 @@ export default function HomePage() {
               <h2 className="text-xl font-bold">Historial de Ventas</h2>
               <div className="flex gap-2">
                 <Input type="date" className="h-10 rounded-xl" />
-                <Button variant="outline" className="rounded-xl">Filtrar</Button>
+                <Button variant="outline" className="rounded-xl flex items-center gap-2">
+                  <Filter className="w-4 h-4" /> Filtrar
+                </Button>
               </div>
             </div>
             <Card className="border-none shadow-sm overflow-hidden">
@@ -190,7 +205,7 @@ export default function HomePage() {
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">Usuarios</h2>
+              <h2 className="text-xl font-bold">Usuarios del Sistema</h2>
               <Button className="bg-[#0a1628] rounded-xl"><Plus className="w-4 h-4 mr-2" /> Nuevo Usuario</Button>
             </div>
             <Card className="border-none shadow-sm overflow-hidden">
@@ -225,44 +240,48 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <Card className="border-none shadow-sm">
               <CardHeader className="border-b">
-                <CardTitle className="text-lg font-bold">Información del Negocio</CardTitle>
+                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-[#c9a227]" /> Información del Negocio
+                </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase text-muted-foreground">Razón Social</label>
-                  <Input defaultValue={store.config.businessName} />
+                  <Input defaultValue={store.config.businessName} className="rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase text-muted-foreground">RIF</label>
-                  <Input defaultValue={store.config.rif} />
+                  <Input defaultValue={store.config.rif} className="rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase text-muted-foreground">Dirección</label>
-                  <Input defaultValue={store.config.address} />
+                  <Input defaultValue={store.config.address} className="rounded-xl" />
                 </div>
-                <Button className="w-full bg-[#0a1628] font-bold">Guardar Cambios</Button>
+                <Button className="w-full bg-[#0a1628] font-bold rounded-xl">Guardar Cambios</Button>
               </CardContent>
             </Card>
             <Card className="border-none shadow-sm">
               <CardHeader className="border-b">
-                <CardTitle className="text-lg font-bold">Configuración Fiscal</CardTitle>
+                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-[#c9a227]" /> Configuración Fiscal
+                </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase text-muted-foreground">IVA (%)</label>
-                    <Input defaultValue={store.config.ivaRate} />
+                    <Input defaultValue={store.config.ivaRate} className="rounded-xl" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase text-muted-foreground">IGTF (%)</label>
-                    <Input defaultValue={store.config.igtfRate} />
+                    <Input defaultValue={store.config.igtfRate} className="rounded-xl" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase text-muted-foreground">Tasa de Cambio (VES/USD)</label>
-                  <Input defaultValue={store.config.exchangeRate} />
+                  <Input defaultValue={store.config.exchangeRate} className="rounded-xl" />
                 </div>
-                <Button className="w-full bg-[#0a1628] font-bold">Actualizar Tasas</Button>
+                <Button className="w-full bg-[#0a1628] font-bold rounded-xl">Actualizar Tasas</Button>
               </CardContent>
             </Card>
           </div>

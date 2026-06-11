@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { BarChart3, TrendingUp, Users, Package, Brain, FileText, Loader2, Sparkles } from 'lucide-react';
+import { 
+  FileText, 
+  TrendingUp, 
+  Users, 
+  Package, 
+  Sparkles, 
+  Loader2, 
+  ChartLine, 
+  ChartPie, 
+  Crown, 
+  Trophy 
+} from 'lucide-react';
 import { analyzeSalesAndInventory, type SalesAndInventoryAnalysisOutput } from '@/ai/flows/sales-and-inventory-analysis';
 import type { AppStore } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -46,7 +57,7 @@ export default function Reports({ store, formatMoney }: ReportsProps) {
           disabled={isAnalyzing}
           className="bg-gradient-to-r from-[#0a1628] to-[#1e3a5f] text-white font-bold border-none"
         >
-          {isAnalyzing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Brain className="w-4 h-4 mr-2" />}
+          {isAnalyzing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
           {isAnalyzing ? 'Analizando...' : 'Generar Análisis IA'}
         </Button>
       </div>
@@ -68,22 +79,26 @@ export default function Reports({ store, formatMoney }: ReportsProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-[#c9a227] tracking-widest">Recomendaciones de Inventario</h4>
+                <h4 className="text-xs font-black uppercase text-[#c9a227] tracking-widest flex items-center gap-2">
+                  <Package className="w-4 h-4" /> Recomendaciones de Inventario
+                </h4>
                 <ul className="space-y-3">
                   {analysis.inventoryRecommendations.map((rec, i) => (
                     <li key={i} className="flex gap-3 text-sm text-[#1a1a2e]">
-                      <div className="w-5 h-5 rounded-full bg-[#c9a227] text-white flex items-center justify-center text-[10px] shrink-0">{i+1}</div>
+                      <div className="w-5 h-5 rounded-full bg-[#c9a227] text-white flex items-center justify-center text-[10px] shrink-0 font-bold">{i+1}</div>
                       {rec}
                     </li>
                   ))}
                 </ul>
               </div>
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-[#c9a227] tracking-widest">Estrategias de Venta</h4>
+                <h4 className="text-xs font-black uppercase text-[#c9a227] tracking-widest flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" /> Estrategias de Venta
+                </h4>
                 <ul className="space-y-3">
                   {analysis.salesStrategyRecommendations.map((rec, i) => (
                     <li key={i} className="flex gap-3 text-sm text-[#1a1a2e]">
-                      <div className="w-5 h-5 rounded-full bg-[#0a1628] text-white flex items-center justify-center text-[10px] shrink-0">{i+1}</div>
+                      <div className="w-5 h-5 rounded-full bg-[#0a1628] text-white flex items-center justify-center text-[10px] shrink-0 font-bold">{i+1}</div>
                       {rec}
                     </li>
                   ))}
@@ -95,10 +110,16 @@ export default function Reports({ store, formatMoney }: ReportsProps) {
       )}
 
       <Tabs defaultValue="sales" className="w-full">
-        <TabsList className="bg-white p-1 h-auto border border-border rounded-2xl mb-6 shadow-sm">
-          <TabsTrigger value="sales" className="data-[state=active]:bg-[#0a1628] data-[state=active]:text-white rounded-xl px-8 py-3 font-bold text-xs uppercase tracking-widest">Resumen de Ventas</TabsTrigger>
-          <TabsTrigger value="products" className="data-[state=active]:bg-[#0a1628] data-[state=active]:text-white rounded-xl px-8 py-3 font-bold text-xs uppercase tracking-widest">Productos</TabsTrigger>
-          <TabsTrigger value="customers" className="data-[state=active]:bg-[#0a1628] data-[state=active]:text-white rounded-xl px-8 py-3 font-bold text-xs uppercase tracking-widest">Clientes</TabsTrigger>
+        <TabsList className="bg-white p-1 h-auto border border-border rounded-2xl mb-6 shadow-sm overflow-x-auto flex flex-nowrap sm:flex-wrap">
+          <TabsTrigger value="sales" className="data-[state=active]:bg-[#0a1628] data-[state=active]:text-white rounded-xl px-8 py-3 font-bold text-xs uppercase tracking-widest flex items-center gap-2 whitespace-nowrap">
+            <ChartLine className="w-4 h-4" /> Ventas
+          </TabsTrigger>
+          <TabsTrigger value="products" className="data-[state=active]:bg-[#0a1628] data-[state=active]:text-white rounded-xl px-8 py-3 font-bold text-xs uppercase tracking-widest flex items-center gap-2 whitespace-nowrap">
+            <Trophy className="w-4 h-4" /> Productos
+          </TabsTrigger>
+          <TabsTrigger value="customers" className="data-[state=active]:bg-[#0a1628] data-[state=active]:text-white rounded-xl px-8 py-3 font-bold text-xs uppercase tracking-widest flex items-center gap-2 whitespace-nowrap">
+            <Crown className="w-4 h-4" /> Clientes
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="sales">
@@ -111,8 +132,8 @@ export default function Reports({ store, formatMoney }: ReportsProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-12 flex flex-col items-center justify-center text-center opacity-50">
-                <BarChart3 className="w-16 h-16 mb-4 text-muted-foreground" />
-                <p className="text-sm font-bold">Gráfico de Ventas</p>
+                <ChartPie className="w-16 h-16 mb-4 text-muted-foreground" />
+                <p className="text-sm font-bold">Distribución de Ventas</p>
                 <p className="text-xs mt-2">Total acumulado: <span className="font-bold text-[#0a1628]">{formatMoney(totalRevenue)}</span></p>
               </CardContent>
             </Card>
@@ -144,7 +165,7 @@ export default function Reports({ store, formatMoney }: ReportsProps) {
           <Card className="border-none shadow-sm">
             <CardHeader className="border-b">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Package className="w-4 h-4 text-[#c9a227]" />
+                <Trophy className="w-4 h-4 text-[#c9a227]" />
                 Top Productos Vendidos
               </CardTitle>
             </CardHeader>
@@ -175,7 +196,7 @@ export default function Reports({ store, formatMoney }: ReportsProps) {
           <Card className="border-none shadow-sm">
             <CardHeader className="border-b">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#c9a227]" />
+                <Crown className="w-4 h-4 text-[#c9a227]" />
                 Mejores Clientes
               </CardTitle>
             </CardHeader>

@@ -1,13 +1,13 @@
 import React from 'react';
 import { 
-  PieChart, 
+  LayoutDashboard, 
   ShoppingCart, 
-  Boxes, 
+  Package, 
   Tags, 
   Users, 
   FileText, 
-  BarChart3, 
-  UserRound, 
+  TrendingUp, 
+  Shield, 
   Settings, 
   LogOut, 
   Menu,
@@ -43,14 +43,14 @@ export default function Shell({
   if (!currentUser) return <>{children}</>;
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: PieChart },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'pos', label: 'Punto de Venta', icon: ShoppingCart },
-    { id: 'products', label: 'Productos', icon: Boxes },
+    { id: 'products', label: 'Productos', icon: Package },
     { id: 'categories', label: 'Categorías', icon: Tags },
     { id: 'customers', label: 'Clientes', icon: Users },
     { id: 'sales', label: 'Ventas', icon: FileText },
-    { id: 'reports', label: 'Reportes', icon: BarChart3 },
-    { id: 'users', label: 'Usuarios', icon: UserRound },
+    { id: 'reports', label: 'Reportes', icon: TrendingUp },
+    { id: 'users', label: 'Usuarios', icon: Shield },
     { id: 'config', label: 'Configuración', icon: Settings },
   ];
 

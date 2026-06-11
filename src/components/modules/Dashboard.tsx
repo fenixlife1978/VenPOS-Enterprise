@@ -1,9 +1,20 @@
 import React from 'react';
-import { ShoppingBag, Coins, Boxes, TriangleAlert, ArrowUp, ArrowDown, Check, Clock, Bell } from 'lucide-react';
+import { 
+  ShoppingBag, 
+  Coins, 
+  Package, 
+  AlertCircle, 
+  TrendingUp, 
+  TrendingDown, 
+  CheckCircle, 
+  Clock, 
+  AlertTriangle 
+} from 'lucide-react';
 import type { AppStore } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface DashboardProps {
   store: AppStore;
@@ -14,16 +25,16 @@ interface DashboardProps {
 export default function Dashboard({ store, setActiveModule, formatMoney }: DashboardProps) {
   const today = new Date().toISOString().split('T')[0];
   const todaySales = store.sales.filter(s => s.date.startsWith(today));
-  const totalSales = todaySales.length;
+  const totalSalesCount = todaySales.length;
   const totalRevenue = todaySales.reduce((sum, s) => sum + s.total, 0);
   const totalProducts = store.products.filter(p => p.active).length;
-  const lowStock = store.products.filter(p => p.stock <= p.minStock).length;
+  const lowStockCount = store.products.filter(p => p.stock <= p.minStock).length;
 
   const stats = [
-    { label: 'Ventas Hoy', value: totalSales, icon: ShoppingBag, color: 'navy', trend: 'Activo', trendDir: 'up' },
+    { label: 'Ventas Hoy', value: totalSalesCount, icon: ShoppingBag, color: 'navy', trend: 'Activo', trendDir: 'up' },
     { label: 'Ingresos Hoy', value: formatMoney(totalRevenue), icon: Coins, color: 'gold', trend: 'En línea', trendDir: 'up' },
-    { label: 'Productos Activos', value: totalProducts, icon: Boxes, color: 'success', trend: 'Inventario', trendDir: 'up' },
-    { label: 'Stock Bajo', value: lowStock, icon: TriangleAlert, color: 'danger', trend: 'Revisar', trendDir: 'down' },
+    { label: 'Productos Activos', value: totalProducts, icon: Package, color: 'success', trend: 'Inventario', trendDir: 'up' },
+    { label: 'Stock Bajo', value: lowStockCount, icon: AlertCircle, color: 'danger', trend: 'Revisar', trendDir: 'down' },
   ];
 
   return (
@@ -49,7 +60,7 @@ export default function Dashboard({ store, setActiveModule, formatMoney }: Dashb
                   "flex items-center gap-1 mt-2 text-[10px] font-bold uppercase",
                   stat.trendDir === 'up' ? "text-green-600" : "text-red-600"
                 )}>
-                  {stat.trendDir === 'up' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                  {stat.trendDir === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                   {stat.trend}
                 </div>
               </div>
@@ -90,7 +101,7 @@ export default function Dashboard({ store, setActiveModule, formatMoney }: Dashb
                     </td>
                     <td className="px-6 py-4">
                       <Badge className="bg-green-50 text-green-700 hover:bg-green-100 border-none flex items-center gap-1 w-fit">
-                        <Check className="w-3 h-3" /> Completada
+                        <CheckCircle className="w-3 h-3" /> Completada
                       </Badge>
                     </td>
                   </tr>
@@ -108,7 +119,7 @@ export default function Dashboard({ store, setActiveModule, formatMoney }: Dashb
         <Card className="border-none shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between border-b px-6 py-4">
             <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <Bell className="w-5 h-5 text-[#c9a227]" />
+              <AlertTriangle className="w-5 h-5 text-[#c9a227]" />
               Alertas de Inventario
             </CardTitle>
             <Button variant="outline" size="sm" onClick={() => setActiveModule('products')}>Gestionar</Button>
@@ -147,8 +158,4 @@ export default function Dashboard({ store, setActiveModule, formatMoney }: Dashb
       </div>
     </div>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
 }

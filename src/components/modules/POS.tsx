@@ -1,11 +1,27 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Barcode, ShoppingBasket, Trash2, CheckCircle, Info, RefreshCcw } from 'lucide-react';
+import { 
+  Search, 
+  Barcode, 
+  ShoppingCart, 
+  Trash2, 
+  CheckCircle, 
+  RefreshCw, 
+  Minus, 
+  Plus, 
+  DollarSign, 
+  Smartphone, 
+  CreditCard, 
+  Landmark, 
+  Building2,
+  Package
+} from 'lucide-react';
 import type { AppStore, Product, SaleItem, Sale } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 interface POSProps {
   store: AppStore;
@@ -109,7 +125,7 @@ export default function POS({ store, currency, formatMoney, addSale, currentUser
       <div className="flex-1 flex flex-col bg-white rounded-2xl border shadow-sm overflow-hidden">
         {/* Exchange Banner */}
         <div className="bg-[#f5efe0] border-b border-[#c9a227]/30 px-6 py-3 flex items-center gap-3 text-xs font-bold text-[#0a1628]">
-          <RefreshCcw className="w-4 h-4 text-[#c9a227]" />
+          <RefreshCw className="w-4 h-4 text-[#c9a227]" />
           Tasa oficial: <span className="text-[#c9a227]">1 USD = {store.config.exchangeRate.toFixed(2)} Bs.</span>
         </div>
 
@@ -170,7 +186,7 @@ export default function POS({ store, currency, formatMoney, addSale, currentUser
                 className="group p-5 bg-white border-2 border-border rounded-2xl text-center hover:border-[#c9a227] hover:shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="w-16 h-16 bg-muted rounded-xl mx-auto mb-3 flex items-center justify-center text-muted-foreground group-hover:bg-[#f5efe0] group-hover:text-[#c9a227] transition-colors">
-                  <Boxes className="w-8 h-8" />
+                  <Package className="w-8 h-8" />
                 </div>
                 <h4 className="text-sm font-bold truncate text-[#1a1a2e]">{p.name}</h4>
                 <p className="text-lg font-black text-[#0a1628] mt-1 tracking-tight">{formatMoney(price)}</p>
@@ -184,7 +200,7 @@ export default function POS({ store, currency, formatMoney, addSale, currentUser
       {/* Cart Side */}
       <div className="w-full lg:w-[400px] flex flex-col bg-white rounded-2xl border shadow-sm overflow-hidden">
         <div className="bg-[#0a1628] text-white p-5 flex items-center gap-3">
-          <ShoppingBasket className="w-5 h-5 text-[#c9a227]" />
+          <ShoppingCart className="w-5 h-5 text-[#c9a227]" />
           <h3 className="font-bold">Carrito de Compra</h3>
           <Badge className="ml-auto bg-[#c9a227] text-[#0a1628] font-bold border-none">{cart.length}</Badge>
         </div>
@@ -199,9 +215,13 @@ export default function POS({ store, currency, formatMoney, addSale, currentUser
                   <p className="text-[10px] text-muted-foreground font-bold uppercase">{formatMoney(price)} c/u</p>
                 </div>
                 <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
-                  <button onClick={() => updateQty(item.productId, -1)} className="w-7 h-7 bg-white rounded-md flex items-center justify-center font-bold text-[#0a1628] shadow-sm hover:bg-[#0a1628] hover:text-white transition-colors">-</button>
+                  <button onClick={() => updateQty(item.productId, -1)} className="w-7 h-7 bg-white rounded-md flex items-center justify-center font-bold text-[#0a1628] shadow-sm hover:bg-[#0a1628] hover:text-white transition-colors">
+                    <Minus className="w-4 h-4" />
+                  </button>
                   <span className="w-6 text-center text-xs font-black">{item.quantity}</span>
-                  <button onClick={() => addToCart(store.products.find(p => p.id === item.productId)!)} className="w-7 h-7 bg-white rounded-md flex items-center justify-center font-bold text-[#0a1628] shadow-sm hover:bg-[#0a1628] hover:text-white transition-colors">+</button>
+                  <button onClick={() => addToCart(store.products.find(p => p.id === item.productId)!)} className="w-7 h-7 bg-white rounded-md flex items-center justify-center font-bold text-[#0a1628] shadow-sm hover:bg-[#0a1628] hover:text-white transition-colors">
+                    <Plus className="w-4 h-4" />
+                  </button>
                 </div>
                 <div className="text-right min-w-[70px]">
                   <p className="text-sm font-black text-[#0a1628]">{formatMoney(price * item.quantity)}</p>
@@ -213,7 +233,7 @@ export default function POS({ store, currency, formatMoney, addSale, currentUser
             );
           }) : (
             <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground opacity-50">
-              <ShoppingBasket className="w-16 h-16 mb-4" />
+              <ShoppingCart className="w-16 h-16 mb-4" />
               <h3 className="text-sm font-bold">Carrito Vacío</h3>
               <p className="text-xs">Seleccione productos para comenzar</p>
             </div>
@@ -246,16 +266,24 @@ export default function POS({ store, currency, formatMoney, addSale, currentUser
           <div>
             <label className="text-[10px] font-bold uppercase text-muted-foreground mb-3 block">Método de Pago</label>
             <div className="grid grid-cols-3 gap-2">
-              {['cash', 'usd', 'transfer', 'mobile', 'biopago', 'card'].map(m => (
+              {[
+                { id: 'cash', label: 'Bs. Efec.', icon: DollarSign },
+                { id: 'usd', label: 'Divisas', icon: DollarSign },
+                { id: 'transfer', label: 'Transf.', icon: Building2 },
+                { id: 'mobile', label: 'P. Móvil', icon: Smartphone },
+                { id: 'biopago', label: 'Biopago', icon: Landmark },
+                { id: 'card', label: 'Tarjeta', icon: CreditCard }
+              ].map(m => (
                 <button 
-                  key={m} 
-                  onClick={() => setPaymentMethod(m)}
+                  key={m.id} 
+                  onClick={() => setPaymentMethod(m.id)}
                   className={cn(
-                    "px-1 py-2 text-[10px] font-bold rounded-lg border-2 uppercase transition-all",
-                    paymentMethod === m ? "bg-[#0a1628] border-[#0a1628] text-white" : "bg-white border-border text-muted-foreground hover:border-[#c9a227]"
+                    "flex flex-col items-center justify-center gap-1 p-2 text-[9px] font-bold rounded-lg border-2 uppercase transition-all",
+                    paymentMethod === m.id ? "bg-[#0a1628] border-[#0a1628] text-white" : "bg-white border-border text-muted-foreground hover:border-[#c9a227]"
                   )}
                 >
-                  {m === 'cash' ? 'Bs. Efec.' : m === 'usd' ? 'Divisas' : m === 'transfer' ? 'Transf.' : m === 'mobile' ? 'P. Móvil' : m === 'biopago' ? 'Biopago' : 'Tarjeta'}
+                  <m.icon className="w-3 h-3" />
+                  {m.label}
                 </button>
               ))}
             </div>
@@ -273,8 +301,4 @@ export default function POS({ store, currency, formatMoney, addSale, currentUser
       </div>
     </div>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
 }
