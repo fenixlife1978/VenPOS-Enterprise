@@ -35,37 +35,48 @@ interface ProductFormProps {
   editingProduct: any;
 }
 
+const DEFAULT_FORM_STATE = {
+  code: '',
+  name: '',
+  brand: '',
+  unit: 'unidad',
+  departmentId: '',
+  categoryId: '',
+  initialStock: 0,
+  minStock: 0,
+  costUSD: 0,
+  margin: 30,
+  priceUSD: 0,
+  priceVES: 0,
+  appliesIva: false,
+  ivaPercent: 16,
+  isComposite: false,
+  components: [],
+  alternativePrices: {
+    mayor: 0,
+    costo: 0,
+    oferta: 0,
+    promocion: 0,
+    precio1: 0
+  }
+};
+
 export default function ProductForm({ isOpen, onClose, store, updateStore, editingProduct }: ProductFormProps) {
   const { calculatePrice, calculateMargin } = useVenPos();
-  const [formData, setFormData] = useState<any>({
-    code: '',
-    name: '',
-    brand: '',
-    unit: 'unidad',
-    departmentId: '',
-    categoryId: '',
-    initialStock: 0,
-    minStock: 0,
-    costUSD: 0,
-    margin: 30,
-    priceUSD: 0,
-    priceVES: 0,
-    appliesIva: false,
-    ivaPercent: 16,
-    isComposite: false,
-    components: [],
-    alternativePrices: {
-      mayor: 0,
-      costo: 0,
-      oferta: 0,
-      promocion: 0,
-      precio1: 0
-    }
-  });
+  const [formData, setFormData] = useState<any>(DEFAULT_FORM_STATE);
 
   useEffect(() => {
     if (editingProduct) {
-      setFormData(editingProduct);
+      setFormData({
+        ...DEFAULT_FORM_STATE,
+        ...editingProduct,
+        alternativePrices: {
+          ...DEFAULT_FORM_STATE.alternativePrices,
+          ...(editingProduct.alternativePrices || {})
+        }
+      });
+    } else {
+      setFormData(DEFAULT_FORM_STATE);
     }
   }, [editingProduct]);
 
@@ -145,7 +156,6 @@ export default function ProductForm({ isOpen, onClose, store, updateStore, editi
         <ScrollArea className="h-[75vh]">
           <div className="p-8 space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Basic Info */}
               <div className="space-y-4 col-span-2">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -235,7 +245,6 @@ export default function ProductForm({ isOpen, onClose, store, updateStore, editi
                 </div>
               </div>
 
-              {/* Composition Section */}
               <div className="bg-muted/30 p-6 rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-4 text-center">
                 <div className="flex items-center gap-2 mb-2">
                   <Checkbox 
@@ -257,7 +266,6 @@ export default function ProductForm({ isOpen, onClose, store, updateStore, editi
               </div>
             </div>
 
-            {/* Price Calculation (Tridirectional) */}
             <div className="bg-[#f5efe0]/30 p-8 rounded-[24px] border-2 border-[#c9a227]/20">
               <div className="flex items-center gap-3 mb-6">
                 <Calculator className="w-5 h-5 text-[#c9a227]" />
@@ -307,11 +315,12 @@ export default function ProductForm({ isOpen, onClose, store, updateStore, editi
               </div>
 
               <div className="mt-8 grid grid-cols-2 md:grid-cols-5 gap-4">
-                {Object.keys(formData.alternativePrices).map((key) => (
+                {Object.keys(formData.alternativePrices || {}).map((key) => (
                   <div key={key} className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-muted-foreground">Precio {key}</Label>
                     <Input 
                       type="number"
+                      step="0.01"
                       value={formData.alternativePrices[key]}
                       onChange={e => setFormData({
                         ...formData,

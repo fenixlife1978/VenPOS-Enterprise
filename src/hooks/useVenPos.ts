@@ -19,7 +19,33 @@ const INITIAL_DATA: AppStore = {
     { id: 2, name: 'Nestlé' }
   ],
   products: [
-    { id: 1, code: 'P001', name: 'Harina Pan 1kg', brand: 'Polar', unit: 'unidad', categoryId: 2, departmentId: 1, costUSD: 0.80, margin: 20, priceVES: 36.50, priceUSD: 1.00, stock: 50, initialStock: 50, minStock: 10, active: true, appliesIva: false, ivaPercent: 16, isComposite: false },
+    { 
+      id: 1, 
+      code: 'P001', 
+      name: 'Harina Pan 1kg', 
+      brand: 'Polar', 
+      unit: 'unidad', 
+      categoryId: 2, 
+      departmentId: 1, 
+      costUSD: 0.80, 
+      margin: 20, 
+      priceVES: 36.50, 
+      priceUSD: 1.00, 
+      stock: 50, 
+      initialStock: 50, 
+      minStock: 10, 
+      active: true, 
+      appliesIva: false, 
+      ivaPercent: 16, 
+      isComposite: false,
+      alternativePrices: {
+        mayor: 0.95,
+        costo: 0.80,
+        oferta: 0.90,
+        promocion: 0.85,
+        precio1: 0.98
+      }
+    },
   ],
   customers: [
     { id: 1, name: 'Consumidor Final', idCard: 'V-00000000', phone: '', email: '', address: '', purchases: 0, totalSpent: 0 }
@@ -109,7 +135,6 @@ export function useVenPos() {
     return `Bs. ${amount.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }, [currency]);
 
-  // Price Calculation Logic
   const calculatePrice = useCallback((cost: number, margin: number, rate: number) => {
     if (margin === 100) return { usd: 0, ves: 0 };
     const usd = cost / (1 - (margin / 100));
