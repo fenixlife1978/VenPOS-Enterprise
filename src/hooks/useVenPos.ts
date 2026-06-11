@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { AppStore, User, Product, Category, Customer, Sale, Config } from '@/lib/types';
+import type { AppStore, User, Product, Category, Customer, Sale, Config, InventoryMovement, Comanda } from '@/lib/types';
 
 const INITIAL_DATA: AppStore = {
   users: [
@@ -8,22 +8,25 @@ const INITIAL_DATA: AppStore = {
   ],
   categories: [
     { id: 1, name: 'General', description: 'Productos generales' },
-    { id: 2, name: 'Alimentos', description: 'Productos alimenticios' },
-    { id: 3, name: 'Bebidas', description: 'Bebidas y refrescos' },
-    { id: 4, name: 'Limpieza', description: 'Productos de limpieza' },
-    { id: 5, name: 'Higiene', description: 'Productos de higiene personal' }
+    { id: 2, name: 'Alimentos', description: 'Productos alimenticios' }
+  ],
+  departments: [
+    { id: 1, name: 'Víveres' },
+    { id: 2, name: 'Higiene' }
+  ],
+  brands: [
+    { id: 1, name: 'Polar' },
+    { id: 2, name: 'Nestlé' }
   ],
   products: [
-    { id: 1, code: 'P001', name: 'Harina Pan 1kg', description: 'Harina de maíz precocida', categoryId: 2, priceVES: 25.50, priceUSD: 0.70, stock: 50, minStock: 10, unit: 'unidad', active: true },
-    { id: 2, code: 'P002', name: 'Arroz 1kg', description: 'Arroz blanco', categoryId: 2, priceVES: 18.00, priceUSD: 0.49, stock: 45, minStock: 10, unit: 'unidad', active: true },
-    { id: 3, code: 'P003', name: 'Aceite 1L', description: 'Aceite vegetal', categoryId: 2, priceVES: 32.00, priceUSD: 0.88, stock: 30, minStock: 8, unit: 'unidad', active: true },
-    { id: 4, code: 'P004', name: 'Pasta Dental', description: 'Pasta dental 100g', categoryId: 5, priceVES: 15.00, priceUSD: 0.41, stock: 25, minStock: 5, unit: 'unidad', active: true }
+    { id: 1, code: 'P001', name: 'Harina Pan 1kg', brand: 'Polar', unit: 'unidad', categoryId: 2, departmentId: 1, costUSD: 0.80, margin: 20, priceVES: 36.50, priceUSD: 1.00, stock: 50, initialStock: 50, minStock: 10, active: true, appliesIva: false, ivaPercent: 16, isComposite: false },
   ],
   customers: [
-    { id: 1, name: 'Consumidor Final', idCard: 'V-00000000', phone: '', email: '', address: '', purchases: 0, totalSpent: 0 },
-    { id: 2, name: 'Juan Pérez', idCard: 'V-12345678', phone: '0414-1234567', email: 'juan@email.com', address: 'Caracas', purchases: 0, totalSpent: 0 }
+    { id: 1, name: 'Consumidor Final', idCard: 'V-00000000', phone: '', email: '', address: '', purchases: 0, totalSpent: 0 }
   ],
   sales: [],
+  comandas: [],
+  movements: [],
   config: {
     businessName: 'VenPOS Corporativo C.A.',
     rif: 'J-12345678-9',
@@ -32,7 +35,13 @@ const INITIAL_DATA: AppStore = {
     exchangeRate: 36.50,
     ivaRate: 16,
     igtfRate: 3,
-    currency: 'VES'
+    currency: 'VES',
+    cashOpening: {
+      isOpen: false,
+      openedAt: '',
+      initialVES: 0,
+      initialUSD: 0
+    }
   }
 };
 
@@ -43,9 +52,8 @@ export function useVenPos() {
   const [currency, setCurrency] = useState<'VES' | 'USD'>('VES');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Persistence
   useEffect(() => {
-    const saved = localStorage.getItem('venpos_data');
+    const saved = localStorage.getItem('venpos_data_v2');
     if (saved) {
       try {
         setStore(JSON.parse(saved));
@@ -56,7 +64,7 @@ export function useVenPos() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('venpos_data', JSON.stringify(store));
+    localStorage.setItem('venpos_data_v2', JSON.stringify(store));
   }, [store]);
 
   const updateStore = useCallback((updater: (prev: AppStore) => AppStore) => {
@@ -101,6 +109,21 @@ export function useVenPos() {
     return `Bs. ${amount.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }, [currency]);
 
+  // Price Calculation Logic
+  const calculatePrice = useCallback((cost: number, margin: number, rate: number) => {
+    if (margin === 100) return { usd: 0, ves: 0 };
+    const usd = cost / (1 - (margin / 100));
+    return {
+      usd: usd,
+      ves: usd * rate
+    };
+  }, []);
+
+  const calculateMargin = useCallback((cost: number, priceUSD: number) => {
+    if (priceUSD === 0) return 0;
+    return (1 - (cost / priceUSD)) * 100;
+  }, []);
+
   return {
     store,
     updateStore,
@@ -114,6 +137,8 @@ export function useVenPos() {
     addSale,
     formatMoney,
     isSidebarOpen,
-    setIsSidebarOpen
+    setIsSidebarOpen,
+    calculatePrice,
+    calculateMargin
   };
 }

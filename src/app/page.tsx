@@ -7,6 +7,7 @@ import Login from '@/components/modules/Login';
 import Dashboard from '@/components/modules/Dashboard';
 import POS from '@/components/modules/POS';
 import Reports from '@/components/modules/Reports';
+import Inventory from '@/components/modules/Inventory';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ import {
 export default function HomePage() {
   const {
     store,
+    updateStore,
     currentUser,
     activeModule,
     setActiveModule,
@@ -52,76 +54,13 @@ export default function HomePage() {
       case 'dashboard':
         return <Dashboard store={store} setActiveModule={setActiveModule} formatMoney={formatMoney} />;
       case 'pos':
-        return <POS store={store} currency={currency} formatMoney={formatMoney} addSale={addSale} currentUser={currentUser} />;
+        if (currentUser.role !== 'cashier' && currentUser.role !== 'admin') return <div className="p-8 text-center font-bold">Acceso Denegado</div>;
+        return <POS store={store} currency={currency} formatMoney={formatMoney} addSale={addSale} updateStore={updateStore} currentUser={currentUser} />;
       case 'reports':
         return <Reports store={store} formatMoney={formatMoney} />;
+      case 'inventory':
+        return <Inventory store={store} updateStore={updateStore} formatMoney={formatMoney} />;
       
-      case 'products':
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">Gestión de Productos</h2>
-              <Button className="bg-[#0a1628] rounded-xl"><Plus className="w-4 h-4 mr-2" /> Nuevo Producto</Button>
-            </div>
-            <Card className="border-none shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/50 text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
-                    <tr>
-                      <th className="px-6 py-3 text-left">Código</th>
-                      <th className="px-6 py-3 text-left">Nombre</th>
-                      <th className="px-6 py-3 text-left">Precio (Bs)</th>
-                      <th className="px-6 py-3 text-left">Stock</th>
-                      <th className="px-6 py-3 text-left">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {store.products.map(p => (
-                      <tr key={p.id} className="hover:bg-muted/30">
-                        <td className="px-6 py-4 font-mono font-bold">{p.code}</td>
-                        <td className="px-6 py-4 font-bold">{p.name}</td>
-                        <td className="px-6 py-4">{formatMoney(p.priceVES, 'VES')}</td>
-                        <td className="px-6 py-4 font-bold">{p.stock}</td>
-                        <td className="px-6 py-4">
-                          <Badge className="bg-green-50 text-green-700 border-none">Activo</Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          </div>
-        );
-
-      case 'categories':
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">Categorías</h2>
-              <Button className="bg-[#0a1628] rounded-xl"><Plus className="w-4 h-4 mr-2" /> Nueva Categoría</Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {store.categories.map(c => (
-                <Card key={c.id} className="border-none shadow-sm hover:shadow-md transition-all">
-                  <CardHeader>
-                    <CardTitle className="text-md font-bold flex items-center gap-2">
-                      <Tags className="w-4 h-4 text-[#c9a227]" />
-                      {c.name}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">{c.description}</p>
-                    <p className="text-[10px] font-bold uppercase mt-4 text-[#0a1628]">
-                      {store.products.filter(p => p.categoryId === c.id).length} Productos
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        );
-
       case 'customers':
         return (
           <div className="space-y-6">
@@ -177,7 +116,7 @@ export default function HomePage() {
                       <th className="px-6 py-3 text-left">Fecha</th>
                       <th className="px-6 py-3 text-left">Cliente</th>
                       <th className="px-6 py-3 text-left">Total</th>
-                      <th className="px-6 py-3 text-left">Método</th>
+                      <th className="px-6 py-3 text-left">Estado</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -188,7 +127,7 @@ export default function HomePage() {
                         <td className="px-6 py-4">{s.customerName}</td>
                         <td className="px-6 py-4 font-bold">{formatMoney(s.total)}</td>
                         <td className="px-6 py-4">
-                          <Badge className="bg-green-50 text-green-700 border-none uppercase text-[10px] font-bold">{s.method}</Badge>
+                          <Badge className="bg-green-50 text-green-700 border-none uppercase text-[10px] font-bold">{s.status}</Badge>
                         </td>
                       </tr>
                     )) : (
@@ -302,6 +241,7 @@ export default function HomePage() {
       logout={logout}
       isSidebarOpen={isSidebarOpen}
       setIsSidebarOpen={setIsSidebarOpen}
+      exchangeRate={store.config.exchangeRate}
     >
       <div className="max-w-7xl mx-auto">
         {renderModule()}
