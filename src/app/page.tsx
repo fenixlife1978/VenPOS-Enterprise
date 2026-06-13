@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useVenPos } from '@/hooks/useVenPos';
 import Shell from '@/components/layout/Shell';
 import Login from '@/components/modules/Login';
@@ -8,6 +8,7 @@ import Dashboard from '@/components/modules/Dashboard';
 import POS from '@/components/modules/POS';
 import Reports from '@/components/modules/Reports';
 import Inventory from '@/components/modules/Inventory';
+import DashboardAdmin from '@/components/modules/DashboardAdmin';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,13 @@ export default function HomePage() {
     setIsSidebarOpen
   } = useVenPos();
 
+  // ✅ FORZAR módulo POS cuando es cajero
+  useEffect(() => {
+    if (currentUser?.role === 'cashier' && activeModule !== 'pos') {
+      setActiveModule('pos');
+    }
+  }, [currentUser, activeModule, setActiveModule]);
+
   if (!currentUser) {
     return <Login onLogin={login} />;
   }
@@ -54,7 +62,9 @@ export default function HomePage() {
       case 'dashboard':
         return <Dashboard store={store} setActiveModule={setActiveModule} formatMoney={formatMoney} />;
       case 'pos':
-        if (currentUser.role !== 'cashier' && currentUser.role !== 'admin') return <div className="p-8 text-center font-bold">Acceso Denegado</div>;
+        if (currentUser.role !== 'cashier' && currentUser.role !== 'admin') {
+          return <div className="p-8 text-center font-bold">Acceso Denegado</div>;
+        }
         return <POS store={store} currency={currency} formatMoney={formatMoney} addSale={addSale} updateStore={updateStore} currentUser={currentUser} />;
       case 'reports':
         return <Reports store={store} formatMoney={formatMoney} />;
@@ -220,7 +230,7 @@ export default function HomePage() {
                   <label className="text-[10px] font-bold uppercase text-muted-foreground">Tasa de Cambio (VES/USD)</label>
                   <Input defaultValue={store.config.exchangeRate} className="rounded-xl" />
                 </div>
-                <Button className="w-full bg-[#0a1628] font-bold rounded-xl">Actualizar Tasas</Button>
+                <Button className="w-full bg-[#0a1628} font-bold rounded-xl">Actualizar Tasas</Button>
               </CardContent>
             </Card>
           </div>
@@ -231,21 +241,24 @@ export default function HomePage() {
     }
   };
 
+  // ✅ ADMIN: Dashboard con menú lateral completo
+  if (currentUser.role === 'admin') {
+    return (
+      <DashboardAdmin 
+        activeModule={activeModule}
+        setActiveModule={setActiveModule}
+        onLogout={logout}
+        store={store}
+        currentUser={currentUser}
+        formatMoney={formatMoney}
+      />
+    );
+  }
+
+  // ✅ CAJERO: SOLO EL POS (pantalla completa, sin menú lateral)
   return (
-    <Shell
-      currentUser={currentUser}
-      activeModule={activeModule}
-      setActiveModule={setActiveModule}
-      currency={currency}
-      setCurrency={setCurrency}
-      logout={logout}
-      isSidebarOpen={isSidebarOpen}
-      setIsSidebarOpen={setIsSidebarOpen}
-      exchangeRate={store.config.exchangeRate}
-    >
-      <div className="max-w-7xl mx-auto">
-        {renderModule()}
-      </div>
-    </Shell>
+    <div className="h-screen overflow-hidden bg-[#f0f2f5]">
+      {renderModule()}
+    </div>
   );
 }

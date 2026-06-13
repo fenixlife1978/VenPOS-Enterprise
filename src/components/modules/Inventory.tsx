@@ -1,49 +1,83 @@
-"use client";
+'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
-  Plus, 
-  Package, 
-  Tags, 
-  Search, 
-  Edit, 
-  Trash2, 
-  History, 
-  BarChart3, 
-  Settings2, 
-  LayoutGrid, 
-  Tag, 
-  ArrowRightLeft,
-  Barcode
+  Package, Search, Plus, Edit, Trash2, Barcode, History, 
+  TrendingUp, LayoutGrid, Tag, Tags, Eye, Printer, 
+  Download, Upload, RefreshCw, AlertTriangle, X
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import ProductForm from './Inventory/ProductForm';
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { formatMoney } from '@/utils/format';
+import { ProductForm } from './Inventory/ProductForm';
 
 interface InventoryProps {
   store: any;
-  updateStore: (updater: any) => void;
+  updateStore: any;
   formatMoney: (amount: number) => string;
 }
 
-export default function Inventory({ store, updateStore, formatMoney }: InventoryProps) {
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+export default function InventoryModule({ store, updateStore, formatMoney: formatMoneyFn }: InventoryProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [viewingKardex, setViewingKardex] = useState<any | null>(null);
+  const [adjustingStock, setAdjustingStock] = useState<any | null>(null);
+  const [adjustmentQuantity, setAdjustmentQuantity] = useState(0);
+  const [adjustmentReason, setAdjustmentReason] = useState('');
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const filteredProducts = useMemo(() => {
+    let products = store.products || [];
+    if (searchTerm) {
+      products = products.filter((p: any) => 
+        p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        p.code?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    return products;
+  }, [store.products, searchTerm]);
+
+  const productKardex = viewingKardex 
+    ? (store.kardex || []).filter((k: any) => k.productId === viewingKardex.id).sort((a: any, b: any) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      )
+    : [];
+
+  const handleAdjustStock = () => {
+    if (!adjustingStock) return;
+    updateStore((prev: any) => ({
+      ...prev,
+      products: prev.products.map((p: any) => 
+        p.id === adjustingStock.id ? { ...p, stock: adjustmentQuantity } : p
+      ),
+      kardex: [
+        ...(prev.kardex || []),
+        {
+          id: Date.now(),
+          productId: adjustingStock.id,
+          productName: adjustingStock.name,
+          date: new Date().toISOString(),
+          type: 'adjustment',
+          quantity: Math.abs(adjustmentQuantity - adjustingStock.stock),
+          unitCostUSD: adjustingStock.costPrice,
+          totalCostUSD: Math.abs(adjustmentQuantity - adjustingStock.stock) * adjustingStock.costPrice,
+          balanceUSD: adjustmentQuantity * adjustingStock.costPrice,
+          notes: adjustmentReason || 'Ajuste manual'
+        }
+      ]
+    }));
+    setAdjustingStock(null);
+    setAdjustmentQuantity(0);
+    setAdjustmentReason('');
+  };
 
   const handleDelete = () => {
     if (deleteId) {
@@ -53,15 +87,6 @@ export default function Inventory({ store, updateStore, formatMoney }: Inventory
       }));
       setDeleteId(null);
     }
-  };
-
-  const filteredProducts = store.products.filter((p: any) => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const calculateInventoryValue = (products: any[]) => {
-    return products.reduce((acc, p) => acc + (p.stock * p.costUSD * store.config.exchangeRate), 0);
   };
 
   return (
@@ -76,130 +101,174 @@ export default function Inventory({ store, updateStore, formatMoney }: Inventory
         </Button>
       </div>
 
-      <Tabs defaultValue="products" className="w-full">
-        <TabsList className="bg-white p-1 border rounded-2xl mb-6 shadow-sm overflow-x-auto h-auto">
-          <TabsTrigger value="products" className="rounded-xl px-6 py-2.5 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-            <Package className="w-4 h-4" /> Productos
-          </TabsTrigger>
-          <TabsTrigger value="departments" className="rounded-xl px-6 py-2.5 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-            <LayoutGrid className="w-4 h-4" /> Departamentos
-          </TabsTrigger>
-          <TabsTrigger value="brands" className="rounded-xl px-6 py-2.5 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-            <Tag className="w-4 h-4" /> Marcas
-          </TabsTrigger>
-          <TabsTrigger value="categories" className="rounded-xl px-6 py-2.5 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-            <Tags className="w-4 h-4" /> Categorías
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="products">
-          <Card className="border-none shadow-sm overflow-hidden">
-            <div className="p-4 bg-muted/20 border-b flex items-center gap-4">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Buscar por nombre o código..." 
-                  className="pl-10 h-11 rounded-xl"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50 text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
-                  <tr>
-                    <th className="px-6 py-4 text-left">Código</th>
-                    <th className="px-6 py-4 text-left">Nombre</th>
-                    <th className="px-6 py-4 text-left">Stock</th>
-                    <th className="px-6 py-4 text-left">Costo (USD)</th>
-                    <th className="px-6 py-4 text-left">Valor Total</th>
-                    <th className="px-6 py-4 text-center">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {filteredProducts.map((p: any) => (
-                    <tr key={p.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-6 py-4 font-mono font-bold text-[#0a1628] flex items-center gap-2">
-                        <Barcode className="w-4 h-4 text-muted-foreground" />
-                        {p.code}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="font-bold text-[#0a1628]">{p.name}</div>
-                        <div className="text-[10px] text-muted-foreground uppercase">{p.brand} | {p.unit}</div>
-                      </td>
-                      <td className="px-6 py-4 font-bold">
-                        <Badge className={p.stock <= p.minStock ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}>
-                          {p.stock}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 font-medium text-muted-foreground">$ {p.costUSD.toFixed(2)}</td>
-                      <td className="px-6 py-4 font-bold text-[#0a1628]">
-                        {formatMoney(p.stock * p.costUSD * store.config.exchangeRate)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => { setEditingProduct(p); setIsFormOpen(true); }} className="hover:text-blue-600">
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="hover:text-[#c9a227]">
-                            <History className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDeleteId(p.id)} className="hover:text-red-600">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {['departments', 'brands', 'categories'].map((type) => (
-          <TabsContent key={type} value={type}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {store[type].map((item: any) => {
-                const productsInItem = store.products.filter((p: any) => {
-                  if (type === 'departments') return p.departmentId === item.id;
-                  if (type === 'brands') return p.brand === item.name;
-                  if (type === 'categories') return p.categoryId === item.id;
-                  return false;
-                });
-                const totalStock = productsInItem.reduce((acc: number, p: any) => acc + p.stock, 0);
-                const value = calculateInventoryValue(productsInItem);
-
+      <Card className="border-none shadow-sm overflow-hidden">
+        <div className="p-4 bg-muted/20 border-b flex items-center gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input 
+              placeholder="Buscar por nombre o código..." 
+              className="pl-10 h-11 rounded-xl"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Badge className="bg-[#0a1628] text-white">{filteredProducts.length} productos</Badge>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-muted/50">
+              <TableRow>
+                <TableHead className="text-[10px] uppercase font-bold">Código</TableHead>
+                <TableHead className="text-[10px] uppercase font-bold">Producto</TableHead>
+                <TableHead className="text-[10px] uppercase font-bold text-center">Stock</TableHead>
+                <TableHead className="text-[10px] uppercase font-bold text-right">Costo (USD)</TableHead>
+                <TableHead className="text-[10px] uppercase font-bold text-right">Precio Venta</TableHead>
+                <TableHead className="text-[10px] uppercase font-bold text-right">Margen</TableHead>
+                <TableHead className="text-[10px] uppercase font-bold text-center">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredProducts.map((p: any) => {
+                const marginPercent = p.priceUSD && p.costPrice ? ((p.priceUSD - p.costPrice) / p.priceUSD * 100).toFixed(1) : '0';
                 return (
-                  <Card key={item.id} className="border-none shadow-sm hover:shadow-md transition-all">
-                    <CardHeader>
-                      <CardTitle className="text-lg font-bold flex items-center justify-between">
-                        {item.name}
-                        <Badge className="bg-[#0a1628] text-white">{productsInItem.length}</Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold uppercase text-muted-foreground">Stock Total</span>
-                        <span className="text-lg font-black">{totalStock}</span>
+                  <TableRow key={p.id} className="hover:bg-muted/30">
+                    <TableCell className="font-mono font-bold text-[#0a1628]">
+                      <div className="flex items-center gap-2"><Barcode className="w-4 h-4 text-muted-foreground" />{p.code}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-bold text-[#0a1628]">{p.name}</div>
+                      <div className="text-[10px] text-muted-foreground">{p.brandName || 'Sin marca'} | {p.unit}</div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge className={p.stock <= p.minStock ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}>{p.stock}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-medium text-muted-foreground">${p.costPrice?.toFixed(2) || '0.00'}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="font-bold">{formatMoneyFn(p.priceVES)}</div>
+                      <div className="text-[10px] text-muted-foreground">${p.priceUSD?.toFixed(2)}</div>
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-[#c9a227]">{marginPercent}%</TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => { setEditingProduct(p); setIsFormOpen(true); }} className="hover:text-blue-600" title="Editar">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setViewingKardex(p)} className="hover:text-[#c9a227]" title="Ver Kardex">
+                          <History className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setAdjustingStock(p)} className="hover:text-orange-600" title="Ajustar Stock">
+                          <TrendingUp className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setDeleteId(p.id)} className="hover:text-red-600" title="Eliminar">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold uppercase text-muted-foreground">Valor Estimado</span>
-                        <span className="text-md font-bold text-[#c9a227]">{formatMoney(value)}</span>
-                      </div>
-                      <Button variant="outline" className="w-full rounded-xl text-xs font-bold uppercase tracking-wider">
-                        Ver Detalles <ArrowRightLeft className="w-3 h-3 ml-2" />
-                      </Button>
-                    </CardContent>
-                  </Card>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </div>
-          </TabsContent>
-        ))}
-      </Tabs>
+              {filteredProducts.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No hay productos registrados
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
 
+      {/* Modal de Kardex */}
+      <Dialog open={!!viewingKardex} onOpenChange={() => setViewingKardex(null)}>
+        <DialogContent className="max-w-5xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="w-5 h-5 text-[#c9a227]" />
+              Kardex - {viewingKardex?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[60vh]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead className="text-right">Cantidad</TableHead>
+                  <TableHead className="text-right">Costo Unit.</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">Saldo</TableHead>
+                  <TableHead>Notas</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {productKardex.map((entry: any) => (
+                  <TableRow key={entry.id}>
+                    <TableCell className="text-xs">{new Date(entry.date).toLocaleString()}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {entry.type === 'purchase' ? 'Compra' :
+                         entry.type === 'sale' ? 'Venta' :
+                         entry.type === 'adjustment' ? 'Ajuste' : 'Inicial'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-bold">{entry.quantity}</TableCell>
+                    <TableCell className="text-right">${entry.unitCostUSD?.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">${entry.totalCostUSD?.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-bold">${entry.balanceUSD?.toFixed(2)}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{entry.notes}</TableCell>
+                  </TableRow>
+                ))}
+                {productKardex.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      No hay movimientos registrados
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Ajuste de Stock */}
+      <Dialog open={!!adjustingStock} onOpenChange={() => setAdjustingStock(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ajustar Stock - {adjustingStock?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Stock Actual</Label>
+              <p className="text-2xl font-bold">{adjustingStock?.stock}</p>
+            </div>
+            <div>
+              <Label>Nuevo Stock</Label>
+              <Input 
+                type="number"
+                value={adjustmentQuantity}
+                onChange={(e) => setAdjustmentQuantity(parseInt(e.target.value) || 0)}
+                placeholder="Ingrese la nueva cantidad"
+              />
+            </div>
+            <div>
+              <Label>Motivo del Ajuste</Label>
+              <Input 
+                value={adjustmentReason}
+                onChange={(e) => setAdjustmentReason(e.target.value)}
+                placeholder="Ej: Inventario físico, merma, etc."
+              />
+            </div>
+            <Button onClick={handleAdjustStock} className="w-full bg-[#0a1628]">
+              Confirmar Ajuste
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Product Form Modal */}
       {isFormOpen && (
         <ProductForm 
           isOpen={isFormOpen} 
@@ -210,22 +279,19 @@ export default function Inventory({ store, updateStore, formatMoney }: Inventory
         />
       )}
 
-      <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent className="rounded-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="font-bold">¿Eliminar producto?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción no se puede deshacer. El producto será removido permanentemente de su catálogo e historial.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl font-bold">Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 rounded-xl font-bold">
-              Confirmar Eliminación
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Delete Confirmation */}
+      <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Eliminar producto?</DialogTitle>
+          </DialogHeader>
+          <p>Esta acción no se puede deshacer. El producto será removido permanentemente.</p>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setDeleteId(null)}>Cancelar</Button>
+            <Button onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Eliminar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

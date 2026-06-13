@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { AppStore, User, Product, Category, Customer, Sale, Config, InventoryMovement, Comanda } from '@/lib/types';
+import type { AppStore, User, Product, Category, Customer, Sale, Config, AlternatePrice } from '@/lib/types';
 
 const INITIAL_DATA: AppStore = {
   users: [
@@ -7,44 +7,42 @@ const INITIAL_DATA: AppStore = {
     { id: 2, username: 'cajero', password: 'cajero', fullName: 'Cajero Principal', role: 'cashier', active: true, lastLogin: null }
   ],
   categories: [
-    { id: 1, name: 'General', description: 'Productos generales' },
-    { id: 2, name: 'Alimentos', description: 'Productos alimenticios' }
+    { id: 1, name: 'General', departmentId: 1, description: 'Productos generales' },
+    { id: 2, name: 'Alimentos', departmentId: 1, description: 'Productos alimenticios' }
   ],
   departments: [
-    { id: 1, name: 'Víveres' },
-    { id: 2, name: 'Higiene' }
+    { id: 1, name: 'Víveres', description: 'Productos de despensa' },
+    { id: 2, name: 'Higiene', description: 'Cuidado personal' }
   ],
   brands: [
-    { id: 1, name: 'Polar' },
-    { id: 2, name: 'Nestlé' }
+    { id: 1, name: 'Polar', description: 'Productos Polar' },
+    { id: 2, name: 'Nestlé', description: 'Productos Nestlé' }
   ],
   products: [
     { 
       id: 1, 
       code: 'P001', 
       name: 'Harina Pan 1kg', 
-      brand: 'Polar', 
+      description: 'Harina de maíz precocida',
+      brandId: 1, 
+      brandName: 'Polar',
+      departmentId: 1,
+      categoryId: 2,
       unit: 'unidad', 
-      categoryId: 2, 
-      departmentId: 1, 
-      costUSD: 0.80, 
-      margin: 20, 
-      priceVES: 36.50, 
+      costPrice: 0.80, 
+      profitPercentage: 20,
       priceUSD: 1.00, 
+      priceVES: 36.50, 
       stock: 50, 
-      initialStock: 50, 
       minStock: 10, 
-      active: true, 
-      appliesIva: false, 
-      ivaPercent: 16, 
       isComposite: false,
-      alternativePrices: {
-        mayor: 0.95,
-        costo: 0.80,
-        oferta: 0.90,
-        promocion: 0.85,
-        precio1: 0.98
-      }
+      compositeItems: [],
+      hasIVA: false,
+      ivaRate: 16,
+      alternatePrices: [],
+      active: true, 
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
   ],
   customers: [
@@ -61,13 +59,7 @@ const INITIAL_DATA: AppStore = {
     exchangeRate: 36.50,
     ivaRate: 16,
     igtfRate: 3,
-    currency: 'VES',
-    cashOpening: {
-      isOpen: false,
-      openedAt: '',
-      initialVES: 0,
-      initialUSD: 0
-    }
+    currency: 'VES'
   }
 };
 
@@ -82,7 +74,8 @@ export function useVenPos() {
     const saved = localStorage.getItem('venpos_data_v2');
     if (saved) {
       try {
-        setStore(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        setStore(parsed);
       } catch (e) {
         console.error("Failed to load store", e);
       }

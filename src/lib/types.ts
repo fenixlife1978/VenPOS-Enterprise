@@ -1,41 +1,34 @@
-export interface User {
-  id: number;
-  username: string;
-  password?: string;
-  fullName: string;
-  role: 'admin' | 'cashier' | 'seller';
-  active: boolean;
-  lastLogin: string | null;
-}
-
-export interface Category {
+export interface Brand {
   id: number;
   name: string;
-  description: string;
+  description?: string;
 }
 
 export interface Department {
   id: number;
   name: string;
+  description?: string;
 }
 
-export interface Brand {
+export interface Category {
   id: number;
   name: string;
+  departmentId: number;
+  description?: string;
 }
 
-export interface AlternativePrice {
-  id: string;
-  name: string;
+export interface AlternatePrice {
+  type: 'wholesale' | 'cost' | 'offer' | 'promotion' | 'alternate1';
   priceVES: number;
   priceUSD: number;
-  enabled: boolean;
+  minQuantity?: number;
 }
 
-export interface ProductComponent {
+export interface CompositeItem {
   productId: number;
+  productName?: string;
   quantity: number;
-  ownStock: boolean;
+  useOwnStock: boolean;
 }
 
 export interface Product {
@@ -43,29 +36,25 @@ export interface Product {
   code: string;
   name: string;
   description?: string;
-  brand?: string;
-  unit: string;
-  departmentId?: number;
+  brandId: number;
+  brandName?: string;
+  departmentId: number;
   categoryId: number;
-  costUSD: number;
-  margin: number; // Percentage
-  priceVES: number;
-  priceUSD: number;
+  unit: string;
   stock: number;
-  initialStock: number;
   minStock: number;
-  active: boolean;
-  appliesIva: boolean;
-  ivaPercent: number;
   isComposite: boolean;
-  components?: ProductComponent[];
-  alternativePrices?: {
-    mayor: number;
-    costo: number;
-    oferta: number;
-    promocion: number;
-    precio1: number;
-  };
+  compositeItems: CompositeItem[];
+  costPrice: number;
+  profitPercentage: number;
+  priceUSD: number;
+  priceVES: number;
+  hasIVA: boolean;
+  ivaRate: number;
+  alternatePrices: AlternatePrice[];
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Customer {
@@ -79,19 +68,22 @@ export interface Customer {
   totalSpent: number;
 }
 
+export interface User {
+  id: number;
+  username: string;
+  password: string;
+  fullName: string;
+  role: 'admin' | 'cashier' | 'seller';
+  active: boolean;
+  lastLogin: string | null;
+}
+
 export interface SaleItem {
   productId: number;
   name: string;
+  quantity: number;
   priceVES: number;
   priceUSD: number;
-  quantity: number;
-  priceType: 'detal' | 'mayor' | 'costo' | 'oferta' | 'promocion' | 'precio1';
-}
-
-export interface PaymentEntry {
-  method: 'cash_ves' | 'cash_usd' | 'card' | 'biopago' | 'zelle' | 'pagomovil' | 'credit';
-  amount: number; // Always in VES for accounting, except Zelle/Cash USD which are tracked separately
-  amountUSD?: number;
 }
 
 export interface Sale {
@@ -102,19 +94,17 @@ export interface Sale {
   iva: number;
   igtf: number;
   total: number;
-  payments: PaymentEntry[];
   cashier: string;
   customerName: string;
-  status: 'completed' | 'returned';
+  status?: 'completed' | 'refunded' | 'cancelled';
+  payments?: any[];
 }
 
-export interface Comanda {
-  id: number;
-  table: string;
-  items: SaleItem[];
-  status: 'pending' | 'preparing' | 'served' | 'cancelled';
-  servicePercent: number;
-  createdAt: string;
+export interface CashOpening {
+  isOpen: boolean;
+  openedAt: string;
+  initialVES: number;
+  initialUSD: number;
 }
 
 export interface Config {
@@ -126,23 +116,28 @@ export interface Config {
   ivaRate: number;
   igtfRate: number;
   currency: 'VES' | 'USD';
-  cashOpening?: {
-    isOpen: boolean;
-    openedAt: string;
-    initialVES: number;
-    initialUSD: number;
-  };
+  cashOpening?: CashOpening;
 }
 
 export interface InventoryMovement {
   id: number;
   productId: number;
-  date: string;
-  type: 'in' | 'out' | 'adjustment';
+  type: 'purchase' | 'sale' | 'adjustment' | 'return';
   quantity: number;
-  reason: string;
   previousStock: number;
   newStock: number;
+  createdAt: string;
+  userId: number;
+  notes?: string;
+}
+
+export interface Comanda {
+  id: number;
+  tableId: number;
+  items: any[];
+  status: 'pending' | 'in_progress' | 'ready' | 'delivered' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AppStore {

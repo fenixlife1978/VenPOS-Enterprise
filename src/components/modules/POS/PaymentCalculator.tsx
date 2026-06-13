@@ -1,197 +1,303 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  X, 
-  CheckCircle, 
-  Trash2, 
-  Plus, 
-  ArrowRight,
-  Calculator,
-  DollarSign,
-  Smartphone,
-  CreditCard,
-  Landmark,
-  Building2,
-  Wallet
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { X, DollarSign, CreditCard, Banknote, Smartphone, Fingerprint, Plane, Plus, Trash2, Calculator } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { PaymentEntry } from '@/lib/types';
+import { formatMoney } from '@/utils/format';
+
+interface PaymentItem {
+  id: string;
+  method: string;
+  amount: number;
+  usdAmount?: number;
+}
 
 interface PaymentCalculatorProps {
   isOpen: boolean;
   onClose: () => void;
   totalVES: number;
   exchangeRate: number;
-  onConfirm: (payments: PaymentEntry[]) => void;
-  formatMoney: (amount: number) => string;
+  onConfirm: (payments: Array<{ type: string; amountVES: number; amountUSD: number }>) => void;
+  formatMoney: (amount: number, currency?: 'VES' | 'USD') => string;
 }
 
-export default function PaymentCalculator({ isOpen, onClose, totalVES, exchangeRate, onConfirm, formatMoney }: PaymentCalculatorProps) {
-  const [payments, setPayments] = useState<PaymentEntry[]>([]);
-  const [currentAmount, setCurrentAmount] = useState<string>('');
-  const [activeMethod, setActiveMethod] = useState<any>('cash_ves');
+const methods = [
+  { id: 'cash_ves', label: 'EFECTIVO Bs', icon: Banknote, currency: 'Bs' },
+  { id: 'cash_usd', label: 'EFECTIVO USD', icon: DollarSign, currency: 'USD' },
+  { id: 'card', label: 'TARJETA', icon: CreditCard, currency: 'Bs' },
+  { id: 'biopago', label: 'BIOPAGO', icon: Fingerprint, currency: 'Bs' },
+  { id: 'pagomovil', label: 'PAGO MÓVIL', icon: Smartphone, currency: 'Bs' },
+  { id: 'zelle_usd', label: 'ZELLE', icon: Plane, currency: 'USD' },
+];
 
-  const totalPaid = payments.reduce((acc, p) => acc + p.amount, 0);
-  const remaining = totalVES - totalPaid;
+export default function PaymentCalculator({
+  isOpen,
+  onClose,
+  totalVES,
+  exchangeRate,
+  onConfirm,
+  formatMoney
+}: PaymentCalculatorProps) {
+  const [payments, setPayments] = useState<PaymentItem[]>([]);
+  const [currentMethod, setCurrentMethod] = useState('cash_ves');
+  const [inputValue, setInputValue] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const methods = [
-    { id: 'cash_ves', label: 'Efectivo Bs.', icon: DollarSign, color: 'bg-green-500' },
-    { id: 'cash_usd', label: 'Efectivo USD', icon: DollarSign, color: 'bg-[#c9a227]' },
-    { id: 'card', label: 'Tarjeta', icon: CreditCard, color: 'bg-blue-600' },
-    { id: 'biopago', label: 'Biopago', icon: Landmark, color: 'bg-purple-600' },
-    { id: 'zelle', label: 'Zelle USD', icon: Building2, color: 'bg-indigo-600' },
-    { id: 'pagomovil', label: 'Pagomovil', icon: Smartphone, color: 'bg-orange-500' },
-    { id: 'credit', label: 'Crédito', icon: Wallet, color: 'bg-gray-600' }
-  ];
+  const currentMethodObj = methods.find(m => m.id === currentMethod);
+  const isUsd = currentMethodObj?.currency === 'USD';
 
-  const addPayment = useCallback(() => {
-    const amount = parseFloat(currentAmount);
-    if (!amount || amount <= 0) return;
+  const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+  const totalUsd = totalVES / exchangeRate;
+  const totalPaidUsd = payments.reduce((sum, p) => sum + (p.usdAmount || p.amount / exchangeRate), 0);
 
-    let vesAmount = amount;
-    let usdAmount = 0;
+  const isPaidByUsd = totalPaidUsd >= totalUsd - 0.001;
+  const isFullyPaid = isPaidByUsd || totalPaid >= totalVES - 0.01;
+  const remaining = isFullyPaid ? 0 : Math.max(0, totalVES - totalPaid);
+  const change = Math.max(0, totalPaid - totalVES);
+  const ajusteRedondeo = isPaidByUsd && totalPaid < totalVES ? Math.round((totalVES - totalPaid) * 100) / 100 : 0;
+  const displayedTotalPaid = isPaidByUsd && ajusteRedondeo > 0 ? totalVES : totalPaid;
 
-    if (activeMethod === 'cash_usd' || activeMethod === 'zelle') {
-      usdAmount = amount;
-      vesAmount = amount * exchangeRate;
+  useEffect(() => {
+    if (isOpen) {
+      setPayments([]);
+      setInputValue('');
+      setCurrentMethod('cash_ves');
+      setIsProcessing(false);
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
+  }, [isOpen]);
 
-    setPayments([...payments, { method: activeMethod, amount: vesAmount, amountUSD: usdAmount }]);
-    setCurrentAmount('');
-  }, [currentAmount, activeMethod, payments, exchangeRate]);
+  const addPayment = () => {
+    let rawAmount = parseFloat(inputValue);
+    if (isNaN(rawAmount) || rawAmount <= 0) return;
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      if (currentAmount) {
-        addPayment();
-      } else if (totalPaid >= totalVES) {
-        onConfirm(payments);
+    if (isUsd) {
+      const usdAmount = rawAmount;
+      const bsAmount = Math.round(usdAmount * exchangeRate * 100) / 100;
+      const newPayment: PaymentItem = {
+        id: crypto.randomUUID(),
+        method: currentMethod,
+        amount: bsAmount,
+        usdAmount: usdAmount,
+      };
+      setPayments([...payments, newPayment]);
+    } else {
+      const bsAmount = rawAmount;
+      const newPayment: PaymentItem = {
+        id: crypto.randomUUID(),
+        method: currentMethod,
+        amount: bsAmount,
+      };
+      setPayments([...payments, newPayment]);
+    }
+    setInputValue('');
+    inputRef.current?.focus();
+  };
+
+  const removePayment = (id: string) => {
+    setPayments(payments.filter(p => p.id !== id));
+  };
+
+  const setExactAmount = () => {
+    const currentRemaining = Math.max(0, totalVES - totalPaid);
+    if (currentRemaining <= 0) return;
+    
+    let amountToAdd = currentRemaining;
+    if (isUsd) {
+      amountToAdd = payments.length === 0 ? totalUsd : Math.round((currentRemaining / exchangeRate) * 100) / 100;
+    }
+    setInputValue(amountToAdd.toFixed(2));
+  };
+
+  const handleConfirm = useCallback(() => {
+    if (!isFullyPaid) return;
+    setIsProcessing(true);
+    
+    const formattedPayments = payments.map(p => {
+      const method = methods.find(m => m.id === p.method);
+      const isUsdPayment = method?.currency === 'USD';
+      return {
+        type: p.method,
+        amountVES: isUsdPayment ? 0 : p.amount,
+        amountUSD: isUsdPayment ? (p.usdAmount || p.amount / exchangeRate) : 0
+      };
+    });
+    
+    onConfirm(formattedPayments);
+    setIsProcessing(false);
+    onClose();
+  }, [payments, isFullyPaid, onConfirm, onClose, exchangeRate]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+      if (e.code === 'Space' && document.activeElement !== inputRef.current) {
+        e.preventDefault();
+        if (isFullyPaid) handleConfirm();
       }
+      if (e.key === 'Enter' && document.activeElement === inputRef.current) {
+        e.preventDefault();
+        addPayment();
+      }
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isFullyPaid, handleConfirm, addPayment, onClose]);
+
+  if (!isOpen) return null;
+
+  const formatPaymentAmount = (payment: PaymentItem) => {
+    const methodInfo = methods.find(m => m.id === payment.method);
+    if (methodInfo?.currency === 'USD') {
+      const usdValue = payment.usdAmount ?? payment.amount / exchangeRate;
+      return formatMoney(usdValue, 'USD');
     }
+    return formatMoney(payment.amount, 'VES');
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onKeyDown={handleKeyDown}>
-      <Card className="w-full max-w-4xl bg-white rounded-[32px] shadow-2xl overflow-hidden border-none animate-in zoom-in-95 duration-300">
-        <div className="flex flex-col md:flex-row h-full">
-          {/* Methods & Input (Left) */}
-          <div className="flex-1 p-8 space-y-8 bg-muted/20">
-            <div className="flex items-center gap-3">
-              <Calculator className="w-6 h-6 text-[#0a1628]" />
-              <h2 className="text-2xl font-black text-[#0a1628]">Calculadora de Pago</h2>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {methods.map(m => (
-                <button
-                  key={m.id}
-                  onClick={() => setActiveMethod(m.id)}
-                  className={cn(
-                    "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all group",
-                    activeMethod === m.id 
-                      ? "bg-[#0a1628] border-[#0a1628] text-white shadow-lg" 
-                      : "bg-white border-white hover:border-[#c9a227] text-[#0a1628]"
-                  )}
-                >
-                  <m.icon className={cn("w-6 h-6 transition-colors", activeMethod === m.id ? "text-[#c9a227]" : "text-muted-foreground group-hover:text-[#c9a227]")} />
-                  <span className="text-[10px] font-black uppercase tracking-wider">{m.label}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
-                Monto a pagar ({activeMethod.includes('usd') ? 'USD' : 'Bs.'})
-              </Label>
-              <div className="flex gap-4">
-                <Input 
-                  autoFocus
-                  type="number"
-                  step="0.01"
-                  value={currentAmount}
-                  onChange={e => setCurrentAmount(e.target.value)}
-                  placeholder={remaining > 0 ? (activeMethod.includes('usd') ? (remaining / exchangeRate).toFixed(2) : remaining.toFixed(2)) : '0.00'}
-                  className="h-16 rounded-2xl text-2xl font-black border-2 focus-visible:ring-[#0a1628]"
-                />
-                <Button onClick={addPayment} className="h-16 w-16 rounded-2xl bg-[#0a1628] hover:scale-105 transition-transform">
-                  <Plus className="w-8 h-8" />
-                </Button>
-              </div>
-            </div>
+    <div className="fixed z-[200] inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-[500px] max-w-[90vw] border border-gray-200 overflow-hidden animate-in zoom-in-95 duration-200"
+      >
+        {/* Header - VenPOS colors */}
+        <div className="bg-[#0a1628] p-3 text-white flex justify-between items-center select-none">
+          <div className="flex items-center gap-2">
+            <Calculator size={18} className="text-[#c9a227]" />
+            <h3 className="font-black text-sm">Procesar Pago</h3>
           </div>
-
-          {/* Totals & Payments (Right) */}
-          <div className="w-full md:w-[400px] p-8 flex flex-col bg-[#0a1628] text-white relative">
-            <button onClick={onClose} className="absolute top-6 right-6 p-2 text-white/30 hover:text-white rounded-full">
-              <X className="w-6 h-6" />
-            </button>
-
-            <div className="space-y-6 flex-1">
-              <div>
-                <p className="text-[10px] font-black uppercase text-white/40 mb-1 tracking-widest">Monto Total</p>
-                <p className="text-4xl font-black tracking-tighter">{formatMoney(totalVES)}</p>
-                <p className="text-sm font-bold text-[#c9a227]">$ {(totalVES / exchangeRate).toFixed(2)} USD</p>
-              </div>
-
-              <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase text-white/40 border-b border-white/10 pb-2 tracking-widest">Pagos Realizados</p>
-                <ScrollArea className="h-[200px] -mx-2 px-2">
-                  <div className="space-y-2">
-                    {payments.map((p, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-black uppercase text-white/50">{methods.find(m => m.id === p.method)?.label}</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <p className="text-sm font-black">{p.amountUSD ? `$ ${p.amountUSD.toFixed(2)}` : formatMoney(p.amount)}</p>
-                          <button onClick={() => setPayments(payments.filter((_, idx) => idx !== i))} className="text-white/20 hover:text-red-400">
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    {payments.length === 0 && <p className="text-center py-8 text-white/20 text-xs font-bold uppercase italic">No se han agregado pagos</p>}
-                  </div>
-                </ScrollArea>
-              </div>
-
-              <div className="pt-6 border-t border-white/10 space-y-4">
-                <div className="flex justify-between items-end">
-                  <div>
-                    <p className="text-[10px] font-black uppercase text-white/40 mb-1">Restante</p>
-                    <p className={cn("text-2xl font-black", remaining <= 0 ? "text-green-400" : "text-white")}>
-                      {remaining > 0 ? formatMoney(remaining) : formatMoney(0)}
-                    </p>
-                  </div>
-                  {remaining < 0 && (
-                    <div className="text-right">
-                      <p className="text-[10px] font-black uppercase text-white/40 mb-1">Cambio</p>
-                      <p className="text-2xl font-black text-blue-400">{formatMoney(Math.abs(remaining))}</p>
-                    </div>
-                  )}
-                </div>
-
-                <Button 
-                  disabled={totalPaid < totalVES}
-                  onClick={() => onConfirm(payments)}
-                  className={cn(
-                    "w-full h-16 rounded-2xl text-xl font-black uppercase tracking-tight shadow-xl transition-all border-none",
-                    totalPaid >= totalVES ? "bg-[#c9a227] text-[#0a1628] hover:scale-[1.02]" : "bg-white/10 text-white/30"
-                  )}
-                >
-                  Finalizar Venta <CheckCircle className="w-6 h-6 ml-2" />
-                </Button>
-              </div>
-            </div>
-          </div>
+          <button onClick={onClose} className="text-white/50 hover:text-white transition-colors">
+            <X size={18} />
+          </button>
         </div>
-      </Card>
+
+        <div className="p-4 space-y-4">
+          {/* Totales */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl text-center">
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-wider">Total a pagar</span>
+              <p className="text-2xl font-black mt-1 text-[#0a1628]">{formatMoney(totalVES)}</p>
+              <p className="text-xs font-bold text-gray-400 mt-0.5">≈ {formatMoney(totalUsd, 'USD')}</p>
+            </div>
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-3 rounded-xl text-center">
+              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-wider">Pagado</span>
+              <p className="text-2xl font-black mt-1 text-emerald-600">{formatMoney(displayedTotalPaid)}</p>
+              {totalPaidUsd > 0 && <p className="text-xs font-bold text-emerald-500 mt-0.5">{formatMoney(totalPaidUsd, 'USD')}</p>}
+            </div>
+          </div>
+
+          {/* Lista de pagos */}
+          <div className="max-h-32 overflow-y-auto border rounded-xl divide-y">
+            {payments.length === 0 ? (
+              <div className="text-center py-3 text-xs text-gray-400">No hay pagos registrados</div>
+            ) : (
+              payments.map(p => {
+                const methodInfo = methods.find(m => m.id === p.method);
+                return (
+                  <div key={p.id} className="flex justify-between items-center p-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      {methodInfo?.icon && <methodInfo.icon size={14} className="text-gray-500" />}
+                      <span className="font-bold text-gray-700">{methodInfo?.label}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono font-bold">{formatPaymentAmount(p)}</span>
+                      <button onClick={() => removePayment(p.id)} className="text-red-400 hover:text-red-600 transition">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Método y monto */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[9px] font-black uppercase text-gray-500 block mb-1">Método de pago</label>
+              <select
+                value={currentMethod}
+                onChange={(e) => setCurrentMethod(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold bg-white focus:border-[#c9a227] focus:outline-none"
+              >
+                {methods.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-[9px] font-black uppercase text-gray-500 block mb-1">Monto</label>
+              <div className="flex gap-2">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  inputMode="decimal"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value.replace(/[^0-9.]/g, ''))}
+                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono text-right focus:border-[#c9a227] focus:outline-none"
+                  placeholder="0.00"
+                />
+                <button onClick={addPayment} className="bg-[#c9a227] px-3 rounded-xl text-[#0a1628] font-bold text-xs hover:bg-[#d4b43a] transition">
+                  <Plus size={14} />
+                </button>
+              </div>
+              <p className="text-[8px] text-gray-400 mt-1 text-right">
+                {isUsd ? 'Monto en USD' : 'Monto en Bs'}
+              </p>
+            </div>
+          </div>
+
+          {/* Botones de acción */}
+          <div className="flex gap-3">
+            <button
+              onClick={setExactAmount}
+              className="flex-1 py-2 bg-gray-100 text-gray-700 text-xs font-bold rounded-xl border border-gray-200 hover:bg-gray-200 transition"
+            >
+              Monto Exacto
+            </button>
+          </div>
+
+          {/* Banner de estado */}
+          <div className={cn(
+            "rounded-xl p-3 text-center border transition-all",
+            remaining > 0 ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"
+          )}>
+            {remaining > 0 ? (
+              <>
+                <p className="text-[9px] font-black text-red-600 uppercase tracking-wider">Faltante</p>
+                <p className="text-2xl font-black text-red-600 mt-0.5">{formatMoney(remaining)}</p>
+                <p className="text-xs font-bold text-red-500 mt-0.5">≈ {formatMoney(remaining / exchangeRate, 'USD')}</p>
+              </>
+            ) : change > 0 ? (
+              <>
+                <p className="text-[9px] font-black text-green-600 uppercase tracking-wider">Vuelto</p>
+                <p className="text-2xl font-black text-green-600 mt-0.5">{formatMoney(change)}</p>
+                <p className="text-xs font-bold text-green-500 mt-0.5">≈ {formatMoney(change / exchangeRate, 'USD')}</p>
+              </>
+            ) : (
+              <p className="text-sm font-black text-green-600 py-1">✓ Pago completado</p>
+            )}
+          </div>
+
+          {/* Botón finalizar */}
+          <button
+            onClick={handleConfirm}
+            disabled={!isFullyPaid || isProcessing}
+            className={cn(
+              "w-full py-3 rounded-xl text-white font-black text-sm transition-all",
+              isFullyPaid 
+                ? "bg-gradient-to-r from-[#c9a227] to-[#d4b43a] text-[#0a1628] hover:scale-[1.02] shadow-md" 
+                : "bg-gray-300 cursor-not-allowed"
+            )}
+          >
+            {isProcessing ? "Procesando..." : (change > 0 ? `COMPLETAR - Vuelto ${formatMoney(change)}` : "COMPLETAR PAGO")}
+          </button>
+
+          <p className="text-center text-[8px] text-gray-400">
+            ␣ Espacio para finalizar | ESC para cerrar | Enter agrega monto
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
