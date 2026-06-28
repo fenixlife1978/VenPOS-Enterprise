@@ -80,9 +80,12 @@ export default function Login({ onLogin }: LoginProps) {
               </Button>
             </form>
 
-            <div className="text-center p-4 bg-muted/30 rounded-xl border border-border/50">
+            <div className="text-center p-4 bg-muted/30 rounded-xl border border-border/50 space-y-1">
               <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight">
-                Credenciales demo: <span className="text-[#1a1a2e]">admin</span> / <span className="text-[#1a1a2e]">admin</span>
+                Demo Admin: <span className="text-[#1a1a2e]">admin / admin</span>
+              </p>
+              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight">
+                Demo Cajero: <span className="text-[#1a1a2e]">cajero / cajero</span>
               </p>
             </div>
           </div>
