@@ -179,26 +179,6 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
     setCart(prev => prev.filter(item => item.productId !== productId));
   };
 
-  const updatePriceType = (productId: number, type: string) => {
-    const product = store.products.find((p: Product) => p.id === productId);
-    if (!product) return;
-
-    let newPriceVES = product.priceVES;
-    let newPriceUSD = product.priceUSD;
-
-    if (type !== 'Detal' && product.alternatePrices) {
-      const alt = product.alternatePrices.find((p: any) => p.type.toLowerCase() === type.toLowerCase());
-      if (alt) {
-        newPriceVES = alt.priceVES;
-        newPriceUSD = alt.priceUSD;
-      }
-    }
-
-    setCart(prev => prev.map(item => 
-      item.productId === productId ? { ...item, priceType: type, priceVES: newPriceVES, priceUSD: newPriceUSD } : item
-    ));
-  };
-
   const handleCheckout = (payments: any[]) => {
     const saleItems = cart.map(item => ({
       productId: item.productId,
@@ -236,22 +216,6 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
     setCart([]);
     setIsPaymentOpen(false);
     setSelectedCustomer(store.customers[0]);
-  };
-
-  const handleRefund = (saleId: number) => {
-    const sale = store.sales.find((s: any) => s.id === saleId);
-    if (!sale) return;
-
-    updateStore((prev: any) => ({
-      ...prev,
-      sales: prev.sales.map((s: any) => s.id === saleId ? { ...s, status: 'refunded' } : s),
-      products: prev.products.map((p: any) => {
-        const item = sale.items.find((si: any) => si.productId === p.id);
-        return item ? { ...p, stock: p.stock + item.quantity } : p;
-      })
-    }));
-    setActiveModal(null);
-    alert('Venta devuelta con éxito. El stock ha sido restaurado.');
   };
 
   const handleUpdateRate = () => {
@@ -465,7 +429,9 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
       {/* Modal Tasa */}
       <Dialog open={activeModal === 'rate'} onOpenChange={() => setActiveModal(null)}>
         <DialogContent className="max-w-sm bg-white rounded-2xl">
-          <DialogHeader><DialogTitle className="text-black font-black uppercase">Actualizar Tasa BCV</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="text-black font-black uppercase text-center">Actualizar Tasa BCV</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4 py-4">
             <Input type="number" step="0.01" value={tempRate} onChange={(e) => setTempRate(e.target.value)} className="h-12 text-lg font-bold text-center" autoFocus />
             <Button onClick={handleUpdateRate} className="w-full h-12 bg-[#0a1628] text-white font-black uppercase rounded-xl">Aplicar</Button>
@@ -476,6 +442,7 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
       {/* Modal Historial */}
       <Dialog open={activeModal === 'history'} onOpenChange={() => setActiveModal(null)}>
         <DialogContent className="max-w-4xl bg-white rounded-2xl p-0 overflow-hidden">
+          <DialogTitle className="sr-only">Historial de Ventas</DialogTitle>
           <div className="bg-[#0a1628] p-4 text-white flex items-center justify-between">
             <h2 className="font-black uppercase text-sm">Historial de Ventas</h2>
             <X className="w-4 h-4 cursor-pointer" onClick={() => setActiveModal(null)} />
@@ -514,6 +481,7 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
       {/* Modal Corte Z */}
       <Dialog open={activeModal === 'cortez'} onOpenChange={() => setActiveModal(null)}>
         <DialogContent className="max-w-md bg-white rounded-2xl p-0 overflow-hidden">
+          <DialogTitle className="sr-only">Corte de Caja (Z)</DialogTitle>
           <div className="bg-[#0a1628] p-6 text-white text-center">
             <Receipt className="w-10 h-10 text-[#c9a227] mx-auto mb-2" />
             <h2 className="text-xl font-black uppercase tracking-tight">Corte de Caja (Z)</h2>
