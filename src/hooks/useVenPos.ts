@@ -76,13 +76,25 @@ export function useVenPos() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem('venpos_data_v3');
-    if (saved) {
+    // Cargar datos de la tienda
+    const savedStore = localStorage.getItem('venpos_data_v3');
+    if (savedStore) {
       try {
-        const parsed = JSON.parse(saved);
+        const parsed = JSON.parse(savedStore);
         setStore(parsed);
       } catch (e) {
         console.error("Failed to load store", e);
+      }
+    }
+
+    // Cargar sesión del usuario
+    const savedUser = localStorage.getItem('venpos_user_session');
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setCurrentUser(parsedUser);
+      } catch (e) {
+        console.error("Failed to load user session", e);
       }
     }
   }, []);
@@ -90,6 +102,14 @@ export function useVenPos() {
   useEffect(() => {
     localStorage.setItem('venpos_data_v3', JSON.stringify(store));
   }, [store]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('venpos_user_session', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('venpos_user_session');
+    }
+  }, [currentUser]);
 
   const updateStore = useCallback((updater: (prev: AppStore) => AppStore | any) => {
     setStore(prev => {
