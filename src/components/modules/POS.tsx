@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -386,7 +385,7 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
         </div>
 
         <div className="border-t bg-white p-8">
-          <div className="max-w-md ml-auto space-y-3 mb-6">
+          <div className="max-w-[280px] ml-auto space-y-0.5 mb-6">
             <div className="flex justify-between items-center">
               <span className="text-sm font-bold text-gray-500">Subtotal</span>
               <span className="text-sm font-black text-[#0a1628]">{formatMoneyFn(totals.subtotal)}</span>
@@ -395,7 +394,7 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
               <span className="text-sm font-bold text-gray-500">IVA 16%</span>
               <span className="text-sm font-black text-green-600">{formatMoneyFn(totals.iva)}</span>
             </div>
-            <div className="flex justify-between items-center pt-2 border-t">
+            <div className="flex justify-between items-center pt-3 border-t mt-4">
               <span className="text-lg font-black text-[#0a1628] uppercase tracking-tighter">Total a Pagar</span>
               <div className="text-right">
                 <span className="text-3xl font-black text-[#0a1628] leading-none">{formatMoneyFn(totals.total)}</span>
