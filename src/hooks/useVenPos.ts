@@ -121,15 +121,18 @@ export function useVenPos() {
   };
 
   const formatMoney = useCallback((amount: number, overrideCurrency?: 'VES' | 'USD') => {
+    // Validación de seguridad para evitar errores de undefined/null/NaN
+    const safeAmount = (typeof amount !== 'number' || isNaN(amount)) ? 0 : amount;
     const c = overrideCurrency || currency;
+    
     if (c === 'USD') {
-      return `$ ${amount.toFixed(2).replace('.', ',')}`;
+      return `$ ${safeAmount.toFixed(2).replace('.', ',')}`;
     }
-    return `Bs. ${amount.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `Bs. ${safeAmount.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }, [currency]);
 
   const calculatePrice = useCallback((cost: number, margin: number, rate: number) => {
-    if (margin === 100) return { usd: 0, ves: 0 };
+    if (margin >= 100) return { usd: 0, ves: 0 };
     const usd = cost / (1 - (margin / 100));
     return {
       usd: usd,
@@ -138,7 +141,7 @@ export function useVenPos() {
   }, []);
 
   const calculateMargin = useCallback((cost: number, priceUSD: number) => {
-    if (priceUSD === 0) return 0;
+    if (!priceUSD || priceUSD === 0) return 0;
     return (1 - (cost / priceUSD)) * 100;
   }, []);
 

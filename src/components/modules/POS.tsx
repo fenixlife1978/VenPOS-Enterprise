@@ -41,7 +41,7 @@ interface CartItem {
 }
 
 export default function POS({ store, currency, formatMoney: formatMoneyFn, addSale, updateStore, currentUser }: POSProps) {
-  // Hooks de estado
+  // 1. Hooks de estado (Siempre al principio)
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(store.customers[0]);
@@ -49,13 +49,12 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
   const [isComandasOpen, setIsComandasOpen] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  
-  // Modales de Acciones Rápidas
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [tempRate, setTempRate] = useState(store.config.exchangeRate.toString());
 
   const searchRef = useRef<HTMLDivElement>(null);
 
+  // 2. Efectos
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -71,6 +70,7 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // 3. Memorizaciones
   const filteredProducts = useMemo(() => {
     if (searchTerm.length < 2) return [];
     const term = searchTerm.toLowerCase();
@@ -82,20 +82,25 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
   const totals = useMemo(() => {
     let subtotal = 0;
     cart.forEach(item => {
-      subtotal += item.priceVES * item.quantity;
+      subtotal += (item.priceVES || 0) * item.quantity;
     });
-    const iva = subtotal * (store.config.ivaRate / 100);
+    const iva = subtotal * ((store.config.ivaRate || 0) / 100);
     const total = subtotal + iva;
-    const totalUSD = total / store.config.exchangeRate;
+    const totalUSD = total / (store.config.exchangeRate || 1);
     return { subtotal, iva, total, totalUSD };
   }, [cart, store.config]);
 
+  // 4. Retorno temprano si la caja no está abierta
   if (!store.config.cashDrawer?.isOpen) {
     return <CashOpening config={store.config} updateStore={updateStore} currentUser={currentUser} />;
   }
 
+  // 5. Handlers
   const addToCart = (product: Product) => {
-    if (product.stock <= 0) return;
+    if (product.stock <= 0) {
+      alert('Producto sin stock disponible');
+      return;
+    }
     setCart(prev => {
       const existing = prev.find(item => item.productId === product.id);
       if (existing) {
@@ -130,6 +135,10 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
     ));
   };
 
+  const removeFromCart = (productId: number) => {
+    setCart(prev => prev.filter(item => item.productId !== productId));
+  };
+
   const updatePriceType = (productId: number, type: string) => {
     const product = store.products.find((p: Product) => p.id === productId);
     if (!product) return;
@@ -137,7 +146,6 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
     let newPriceVES = product.priceVES;
     let newPriceUSD = product.priceUSD;
 
-    // Lógica para precios alternos si existen
     if (type !== 'Detal' && product.alternatePrices) {
       const alt = product.alternatePrices.find((p: any) => p.type.toLowerCase() === type.toLowerCase());
       if (alt) {
@@ -537,7 +545,7 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
                       </td>
                       <td className="px-4 py-4 font-bold text-[#0a1628] uppercase">{sale.customerName}</td>
                       <td className="px-4 py-4 text-right font-black text-[#0a1628]">{formatMoneyFn(sale.totalVES)}</td>
-                      <td className="px-4 py-4 text-right font-black text-[#c9a227]">${sale.totalUSD.toFixed(2)}</td>
+                      <td className="px-4 py-4 text-right font-black text-[#c9a227]">${(sale.totalUSD || 0).toFixed(2)}</td>
                       <td className="px-4 py-4 text-center">
                         <Badge className={cn(
                           "text-[9px] font-black uppercase",
@@ -588,8 +596,8 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
             <div className="space-y-2">
               <h3 className="text-[10px] font-black text-black uppercase border-b pb-1">Desglose por Métodos</h3>
               {[
-                { label: 'Efectivo Bs.', icon: Wallet, amount: formatMoneyFn(store.sales.reduce((a:number, s:any)=> a + (s.status==='completed' ? s.totalVES : 0), 0)) },
-                { label: 'Efectivo USD', icon: DollarSign, amount: `$ ${store.sales.reduce((a:number, s:any)=> a + (s.status==='completed' ? s.totalUSD : 0), 0).toFixed(2)}` },
+                { label: 'Efectivo Bs.', icon: Wallet, amount: formatMoneyFn(store.sales.reduce((a:number, s:any)=> a + (s.status==='completed' ? (s.totalVES || 0) : 0), 0)) },
+                { label: 'Efectivo USD', icon: DollarSign, amount: `$ ${store.sales.reduce((a:number, s:any)=> a + (s.status==='completed' ? (s.totalUSD || 0) : 0), 0).toFixed(2)}` },
                 { label: 'Tarjeta / Débito', icon: CreditCard, amount: formatMoneyFn(0) },
                 { label: 'Pago Móvil', icon: RefreshCw, amount: formatMoneyFn(0) },
               ].map((m, i) => (
@@ -605,7 +613,7 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
 
             <div className="p-6 bg-[#0a1628] rounded-2xl text-center">
               <span className="text-[10px] font-black text-white/40 uppercase">Gran Total Neto del Día</span>
-              <p className="text-3xl font-black text-white mt-1">{formatMoneyFn(store.sales.reduce((a:number, s:any)=> a + (s.status==='completed' ? s.totalVES : 0), 0))}</p>
+              <p className="text-3xl font-black text-white mt-1">{formatMoneyFn(store.sales.reduce((a:number, s:any)=> a + (s.status==='completed' ? (s.totalVES || 0) : 0), 0))}</p>
             </div>
 
             <Button className="w-full h-14 bg-[#c9a227] text-[#0a1628] rounded-2xl font-black uppercase shadow-xl flex items-center justify-center gap-3">
