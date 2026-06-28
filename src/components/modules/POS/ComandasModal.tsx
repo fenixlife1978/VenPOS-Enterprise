@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 interface ComandasModalProps {
   isOpen: boolean;
@@ -40,7 +41,7 @@ export default function ComandasModal({ isOpen, onClose, store, updateStore }: C
     };
     updateStore((prev: any) => ({
       ...prev,
-      comandas: [...prev.comandas, newComanda]
+      comandas: [...(prev.comandas || []), newComanda]
     }));
     setNewTableName('');
   };
@@ -62,13 +63,13 @@ export default function ComandasModal({ isOpen, onClose, store, updateStore }: C
           {/* Left Panel - New Comanda */}
           <div className="w-full md:w-80 p-6 border-r bg-muted/20 space-y-6">
             <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase text-muted-foreground">Nueva Mesa / Orden</Label>
+              <Label className="text-[10px] font-black uppercase text-black">Nueva Mesa / Orden</Label>
               <div className="flex gap-2">
                 <Input 
                   placeholder="Mesa 01, Delivery..." 
                   value={newTableName}
                   onChange={e => setNewTableName(e.target.value)}
-                  className="rounded-xl h-11"
+                  className="rounded-xl h-11 bg-white border-gray-200"
                 />
                 <Button onClick={addComanda} className="h-11 w-11 rounded-xl bg-[#0a1628] p-0">
                   <Plus className="w-5 h-5" />
@@ -76,16 +77,16 @@ export default function ComandasModal({ isOpen, onClose, store, updateStore }: C
               </div>
             </div>
 
-            <div className="space-y-4 pt-6 border-t">
-              <p className="text-[10px] font-black uppercase text-muted-foreground">Resumen de Sala</p>
+            <div className="space-y-4 pt-6 border-t border-gray-200">
+              <p className="text-[10px] font-black uppercase text-black">Resumen de Sala</p>
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-4 bg-white rounded-2xl border flex flex-col items-center">
-                  <span className="text-2xl font-black text-[#0a1628]">{store.comandas.length}</span>
-                  <span className="text-[8px] font-black uppercase text-muted-foreground">Activas</span>
+                <div className="p-4 bg-white rounded-2xl border border-gray-100 flex flex-col items-center">
+                  <span className="text-2xl font-black text-[#0a1628]">{store.comandas?.length || 0}</span>
+                  <span className="text-[8px] font-black uppercase text-black">Activas</span>
                 </div>
-                <div className="p-4 bg-white rounded-2xl border flex flex-col items-center">
-                  <span className="text-2xl font-black text-blue-600">{store.comandas.filter((c: any) => c.status === 'preparing').length}</span>
-                  <span className="text-[8px] font-black uppercase text-muted-foreground">Cocina</span>
+                <div className="p-4 bg-white rounded-2xl border border-gray-100 flex flex-col items-center">
+                  <span className="text-2xl font-black text-blue-600">{store.comandas?.filter((c: any) => c.status === 'preparing').length || 0}</span>
+                  <span className="text-[8px] font-black uppercase text-black">Cocina</span>
                 </div>
               </div>
             </div>
@@ -99,12 +100,12 @@ export default function ComandasModal({ isOpen, onClose, store, updateStore }: C
 
             <ScrollArea className="flex-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-6">
-                {store.comandas.map((c: any) => (
-                  <Card key={c.id} className="p-5 border-2 hover:border-[#c9a227] transition-all rounded-2xl shadow-sm relative group">
+                {(store.comandas || []).map((c: any) => (
+                  <Card key={c.id} className="p-5 border-2 hover:border-[#c9a227] transition-all rounded-2xl shadow-sm relative group bg-white border-gray-100">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-2">
                         <TableIcon className="w-4 h-4 text-[#c9a227]" />
-                        <span className="font-black text-sm uppercase">{c.table}</span>
+                        <span className="font-black text-sm uppercase text-black">{c.table}</span>
                       </div>
                       <Badge className={cn(
                         "text-[9px] uppercase font-bold",
@@ -116,21 +117,21 @@ export default function ComandasModal({ isOpen, onClose, store, updateStore }: C
                     </div>
 
                     <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        <span className="text-[10px] font-bold uppercase">{new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <div className="flex items-center gap-2 text-black">
+                        <Clock className="w-3 h-3 text-[#c9a227]" />
+                        <span className="text-[10px] font-black uppercase">{new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-[#0a1628]">
-                        <ChefHat className="w-3 h-3" />
-                        <span className="text-[10px] font-bold uppercase">{c.items.length} productos en espera</span>
+                      <div className="flex items-center gap-2 text-black">
+                        <ChefHat className="w-3 h-3 text-[#c9a227]" />
+                        <span className="text-[10px] font-black uppercase">{c.items?.length || 0} productos en espera</span>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
-                      <Button variant="outline" size="sm" className="h-9 rounded-lg text-[9px] font-black uppercase">
+                      <Button variant="outline" size="sm" className="h-9 rounded-lg text-[9px] font-black uppercase text-black border-gray-300">
                         Ver Items
                       </Button>
-                      <Button className="h-9 rounded-lg text-[9px] font-black uppercase bg-[#0a1628]">
+                      <Button className="h-9 rounded-lg text-[9px] font-black uppercase bg-[#0a1628] text-white">
                         Enviar Cocina
                       </Button>
                     </div>
@@ -143,10 +144,10 @@ export default function ComandasModal({ isOpen, onClose, store, updateStore }: C
                     </button>
                   </Card>
                 ))}
-                {store.comandas.length === 0 && (
+                {(!store.comandas || store.comandas.length === 0) && (
                   <div className="col-span-full py-20 text-center opacity-20">
-                    <UtensilsCrossed className="w-20 h-20 mx-auto mb-4" />
-                    <p className="text-lg font-black uppercase">No hay comandas que mostrar</p>
+                    <UtensilsCrossed className="w-20 h-20 mx-auto mb-4 text-[#0a1628]" />
+                    <p className="text-lg font-black uppercase text-[#0a1628]">No hay comandas que mostrar</p>
                   </div>
                 )}
               </div>
