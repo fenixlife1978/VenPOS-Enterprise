@@ -86,9 +86,10 @@ interface CartItem {
 }
 
 export default function POS({ store, currency, formatMoney: formatMoneyFn, addSale, updateStore, currentUser }: POSProps) {
+  // Hooks al inicio para cumplir con las reglas de React
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(store.customers[0]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(store.customers?.[0] || null);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isComandasOpen, setIsComandasOpen] = useState(false);
   const [showResults, setShowResults] = useState(false);
@@ -116,9 +117,9 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
   const filteredProducts = useMemo(() => {
     if (searchTerm.length < 2) return [];
     const term = searchTerm.toLowerCase();
-    return store.products.filter((p: Product) => 
+    return store.products.filter((p: any) => 
       p.active && (p.name.toLowerCase().includes(term) || p.code.toLowerCase().includes(term))
-    ).sort((a: Product, b: Product) => a.name.localeCompare(b.name));
+    ).sort((a: any, b: any) => a.name.localeCompare(b.name));
   }, [store.products, searchTerm]);
 
   const totals = useMemo(() => {
@@ -132,11 +133,16 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
     return { subtotal, iva, total, totalUSD };
   }, [cart, store.config]);
 
+  // Numeración correlativa del ticket
+  const nextTicketNumber = useMemo(() => {
+    return (store.sales.length + 1).toString().padStart(8, '0');
+  }, [store.sales]);
+
   if (!store.config.cashDrawer?.isOpen) {
     return <CashOpening config={store.config} updateStore={updateStore} currentUser={currentUser} />;
   }
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: any) => {
     if (product.stock <= 0) {
       alert('Producto sin stock disponible');
       return;
@@ -168,7 +174,7 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
       setCart(prev => prev.filter(item => item.productId !== productId));
       return;
     }
-    const product = store.products.find((p: Product) => p.id === productId);
+    const product = store.products.find((p: any) => p.id === productId);
     if (product && newQuantity > product.stock) return;
     setCart(prev => prev.map(item => 
       item.productId === productId ? { ...item, quantity: newQuantity } : item
@@ -319,7 +325,10 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
         <div className="bg-[#0a1628] px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <ShoppingCart className="w-5 h-5 text-[#c9a227]" />
-            <h2 className="text-white font-black uppercase text-sm tracking-widest">Carrito de Compras</h2>
+            <div className="flex flex-col">
+              <h2 className="text-white font-black uppercase text-sm tracking-widest">Carrito de Compras</h2>
+              <p className="text-[#c9a227] text-[10px] font-black uppercase">Informe Nro. {nextTicketNumber}</p>
+            </div>
           </div>
           <Badge className="bg-[#c9a227] text-[#0a1628] rounded-full px-4 py-1 font-black text-[11px] border-none">
             {cart.reduce((a, b) => a + b.quantity, 0)} items
@@ -442,7 +451,9 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
       {/* Modal Historial */}
       <Dialog open={activeModal === 'history'} onOpenChange={() => setActiveModal(null)}>
         <DialogContent className="max-w-4xl bg-white rounded-2xl p-0 overflow-hidden">
-          <DialogTitle className="sr-only">Historial de Ventas</DialogTitle>
+          <DialogHeader>
+            <DialogTitle className="sr-only">Historial de Ventas</DialogTitle>
+          </DialogHeader>
           <div className="bg-[#0a1628] p-4 text-white flex items-center justify-between">
             <h2 className="font-black uppercase text-sm">Historial de Ventas</h2>
             <X className="w-4 h-4 cursor-pointer" onClick={() => setActiveModal(null)} />
@@ -481,7 +492,9 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
       {/* Modal Corte Z */}
       <Dialog open={activeModal === 'cortez'} onOpenChange={() => setActiveModal(null)}>
         <DialogContent className="max-w-md bg-white rounded-2xl p-0 overflow-hidden">
-          <DialogTitle className="sr-only">Corte de Caja (Z)</DialogTitle>
+          <DialogHeader>
+            <DialogTitle className="sr-only">Corte de Caja (Z)</DialogTitle>
+          </DialogHeader>
           <div className="bg-[#0a1628] p-6 text-white text-center">
             <Receipt className="w-10 h-10 text-[#c9a227] mx-auto mb-2" />
             <h2 className="text-xl font-black uppercase tracking-tight">Corte de Caja (Z)</h2>
