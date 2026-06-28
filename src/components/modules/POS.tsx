@@ -85,7 +85,6 @@ interface CartItem {
 }
 
 export default function POS({ store, currency, formatMoney: formatMoneyFn, addSale, updateStore, currentUser }: POSProps) {
-  // Hooks al inicio para cumplir con las reglas de React
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(store.customers?.[0] || null);
@@ -132,7 +131,6 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
     return { subtotal, iva, total, totalUSD };
   }, [cart, store.config]);
 
-  // Numeración correlativa del ticket
   const nextTicketNumber = useMemo(() => {
     return (store.sales.length + 1).toString().padStart(8, '0');
   }, [store.sales]);
@@ -321,27 +319,36 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
 
       {/* Columna Derecha (2/3) - Carrito */}
       <div className="flex-1 flex flex-col h-full bg-white">
-        <div className="bg-[#0a1628] px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ShoppingCart className="w-5 h-5 text-[#c9a227]" />
-            <div className="flex flex-col">
-              <h2 className="text-white font-black uppercase text-sm tracking-widest">Carrito de Compras</h2>
-              <p className="text-[#c9a227] text-[10px] font-black uppercase">Informe Nro. {nextTicketNumber}</p>
+        {/* Header Carrito - Estilo Imagen */}
+        <div className="bg-white px-6 py-3 flex items-center justify-between border-b-2 border-black">
+          <div className="flex items-center gap-2">
+            <ShoppingCart className="w-6 h-6 text-black" />
+            <h2 className="text-black font-black uppercase text-xl tracking-tighter">CARRITO</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="bg-black text-[#c9a227] px-4 py-1.5 rounded-full flex items-center gap-2 text-[10px] font-black">
+              <DollarSign className="w-3 h-3" /> INFORME #{nextTicketNumber}
+            </div>
+            <div className="bg-[#c9a227] text-black px-4 py-1.5 rounded-full text-[10px] font-black">
+              TERM. 0023
+            </div>
+            <div className="bg-[#0a1628] text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase">
+              {cart.reduce((a, b) => a + b.quantity, 0)} ITEMS
             </div>
           </div>
-          <Badge className="bg-[#c9a227] text-[#0a1628] rounded-full px-4 py-1 font-black text-[11px] border-none">
-            {cart.reduce((a, b) => a + b.quantity, 0)} items
-          </Badge>
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden">
           <table className="w-full border-collapse">
-            <thead className="bg-[#f1f5f9] border-b">
+            <thead className="bg-black text-white">
               <tr>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Producto</th>
-                <th className="px-6 py-4 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest">Cantidad</th>
-                <th className="px-6 py-4 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">Precio</th>
-                <th className="px-6 py-4 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">Subtotal</th>
+                <th className="px-6 py-3 text-left text-[10px] font-black uppercase tracking-widest">Descripción</th>
+                <th className="px-2 py-3 text-center text-[10px] font-black uppercase tracking-widest">Cant</th>
+                <th className="px-2 py-3 text-center text-[10px] font-black uppercase tracking-widest">U.M.</th>
+                <th className="px-4 py-3 text-right text-[10px] font-black uppercase tracking-widest">Precio ($)</th>
+                <th className="px-4 py-3 text-right text-[10px] font-black uppercase tracking-widest">Precio (Bs)</th>
+                <th className="px-4 py-3 text-right text-[10px] font-black uppercase tracking-widest">Total</th>
+                <th className="px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest">Borrar</th>
               </tr>
             </thead>
           </table>
@@ -352,30 +359,30 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
                   <tr key={item.productId} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <p className="font-bold text-[#0a1628] text-sm uppercase">{item.name}</p>
-                      <button onClick={() => removeFromCart(item.productId)} className="text-[10px] text-red-500 font-bold uppercase hover:underline mt-1">Eliminar</button>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-2 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button onClick={() => updateQuantity(item.productId, item.quantity - 1)} className="p-1 hover:bg-gray-100 rounded"><Minus className="w-3 h-3" /></button>
                         <span className="font-bold text-sm w-8">{item.quantity}</span>
                         <button onClick={() => updateQuantity(item.productId, item.quantity + 1)} className="p-1 hover:bg-gray-100 rounded"><Plus className="w-3 h-3" /></button>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <p className="font-black text-sm text-[#0a1628]">{formatMoneyFn(item.priceVES)}</p>
-                      <p className="text-[10px] text-gray-400 font-bold">$ {item.priceUSD.toFixed(2)}</p>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <p className="font-black text-sm text-[#0a1628]">{formatMoneyFn(item.priceVES * item.quantity)}</p>
-                      <p className="text-[10px] text-gray-400 font-bold">$ {(item.priceUSD * item.quantity).toFixed(2)}</p>
+                    <td className="px-2 py-4 text-center text-xs font-bold uppercase text-gray-500">{item.unit}</td>
+                    <td className="px-4 py-4 text-right font-mono text-sm text-gray-600">${item.priceUSD.toFixed(2)}</td>
+                    <td className="px-4 py-4 text-right font-mono text-sm text-gray-600">{formatMoneyFn(item.priceVES)}</td>
+                    <td className="px-4 py-4 text-right font-black text-sm text-[#0a1628]">{formatMoneyFn(item.priceVES * item.quantity)}</td>
+                    <td className="px-4 py-4 text-center">
+                      <button onClick={() => removeFromCart(item.productId)} className="text-red-500 hover:text-red-700 transition-colors p-1">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
                 {cart.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="py-32 text-center opacity-30">
+                    <td colSpan={7} className="py-32 text-center opacity-30">
                       <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                      <p className="text-xl font-bold text-gray-500">No hay productos en el carrito</p>
+                      <p className="text-xl font-black text-gray-500 uppercase tracking-widest">Carrito Vacío</p>
                     </td>
                   </tr>
                 )}
@@ -384,21 +391,28 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
           </ScrollArea>
         </div>
 
-        <div className="border-t bg-white p-8">
-          <div className="max-w-[280px] ml-auto space-y-0.5 mb-6">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-bold text-gray-500">Subtotal</span>
-              <span className="text-sm font-black text-[#0a1628]">{formatMoneyFn(totals.subtotal)}</span>
+        {/* Footer Totales - Estilo Imagen */}
+        <div className="border-t-4 border-black bg-white p-6">
+          <div className="flex justify-between items-center border-b border-black pb-1 mb-1">
+            <span className="text-sm font-black text-black uppercase">SUBTOTAL:</span>
+            <span className="text-lg font-black text-black">{formatMoneyFn(totals.subtotal)}</span>
+          </div>
+          <div className="flex justify-between items-center mb-6">
+            <span className="text-[10px] font-black text-gray-500 uppercase">IVA (16%):</span>
+            <span className="text-sm font-black text-black">{formatMoneyFn(totals.iva)}</span>
+          </div>
+          
+          <div className="flex justify-between items-end gap-4">
+            <div className="bg-[#fdf6e7] border border-[#e0c080] rounded-2xl p-4 flex-1 max-w-[260px] shadow-sm">
+              <p className="text-[9px] font-black text-gray-500 uppercase mb-1 tracking-wider">Equivalente USD</p>
+              <p className="text-2xl font-black text-black">USD ${totals.totalUSD.toFixed(2)}</p>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-bold text-gray-500">IVA 16%</span>
-              <span className="text-sm font-black text-green-600">{formatMoneyFn(totals.iva)}</span>
-            </div>
-            <div className="flex justify-between items-center pt-3 border-t mt-4">
-              <span className="text-lg font-black text-[#0a1628] uppercase tracking-tighter">Total a Pagar</span>
-              <div className="text-right">
-                <span className="text-3xl font-black text-[#0a1628] leading-none">{formatMoneyFn(totals.total)}</span>
-                <p className="text-xs font-bold text-gray-400 mt-1">$ {totals.totalUSD.toFixed(2)}</p>
+            
+            <div className="text-right">
+              <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1">TOTAL A PAGAR</p>
+              <div className="flex items-baseline justify-end gap-1">
+                <span className="text-5xl font-black text-black leading-none">{totals.total.toLocaleString('es-VE', { minimumFractionDigits: 2 })}</span>
+                <span className="text-sm font-black text-black">BS</span>
               </div>
             </div>
           </div>
@@ -406,9 +420,12 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
           <Button 
             onClick={() => setIsPaymentOpen(true)}
             disabled={cart.length === 0}
-            className="w-full h-16 bg-[#e0c080] hover:bg-[#d4b43a] text-[#0a1628] font-black text-xl rounded-xl uppercase tracking-widest flex items-center justify-center gap-3 transition-all border-none"
+            className="w-full h-16 mt-8 bg-[#a5acb8] hover:bg-[#8b95a5] text-black font-black text-xl rounded-2xl uppercase tracking-[0.2em] border-2 border-black flex items-center justify-center gap-3 transition-all shadow-md group"
           >
-            Procesar Venta <ChevronRight className="w-6 h-6" />
+            <div className="bg-transparent border-2 border-black rounded p-0.5 group-hover:scale-110 transition-transform">
+              <CreditCard className="w-5 h-5" />
+            </div> 
+            COBRAR AHORA
           </Button>
         </div>
       </div>
