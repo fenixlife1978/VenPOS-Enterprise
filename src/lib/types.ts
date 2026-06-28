@@ -78,45 +78,114 @@ export interface User {
   lastLogin: string | null;
 }
 
+export interface Supplier {
+  id: number;
+  name: string;
+  code?: string;
+  rif?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  contactName?: string;
+  active: boolean;
+}
+
+export interface Terminal {
+  id: number;
+  name: string;
+  location?: string;
+  active: boolean;
+  lastSync?: string;
+}
+
 export interface SaleItem {
   productId: number;
   name: string;
   quantity: number;
-  priceVES: number;
-  priceUSD: number;
+  priceType: 'retail' | 'wholesale' | 'offer' | 'promotion' | 'alternate1';
+  unitPriceVES: number;
+  unitPriceUSD: number;
+  subtotalVES: number;
+  subtotalUSD: number;
+  unit: string;
+  hasIVA: boolean;
+  ivaRate: number;
+}
+
+export interface PaymentEntry {
+  type: 'cash_ves' | 'cash_usd' | 'card' | 'biopago' | 'zelle_usd' | 'pagomovil' | 'credit';
+  amountVES: number;
+  amountUSD: number;
+  reference?: string;
 }
 
 export interface Sale {
   id: number;
   date: string;
   items: SaleItem[];
-  subtotal: number;
+  payments: PaymentEntry[];
+  subtotalVES: number;
+  subtotalUSD: number;
   iva: number;
   igtf: number;
-  total: number;
-  cashier: string;
+  totalVES: number;
+  totalUSD: number;
+  cashierId: number;
+  cashierName: string;
+  customerId: number;
   customerName: string;
-  status?: 'completed' | 'refunded' | 'cancelled';
-  payments?: any[];
+  orderId?: number;
+  tableId?: number;
+  refundOf?: number;
+  status: 'completed' | 'refunded' | 'cancelled';
 }
 
-export interface CashOpening {
-  isOpen: boolean;
-  openedAt: string;
+export interface CashMovement {
+  id: number;
+  type: 'opening' | 'closing' | 'sale' | 'refund' | 'withdrawal';
+  amountVES: number;
+  amountUSD: number;
+  description: string;
+  createdAt: string;
+  referenceId?: number;
+}
+
+export interface CashDrawer {
+  id: number;
+  userId: number;
+  userName: string;
+  openingDate: string;
+  closingDate?: string;
   initialVES: number;
   initialUSD: number;
+  finalVES?: number;
+  finalUSD?: number;
+  exchangeRate: number;
+  isOpen: boolean;
+  sales: Sale[];
+  movements: CashMovement[];
 }
 
-export interface Config {
-  businessName: string;
-  rif: string;
-  address: string;
-  phone: string;
-  exchangeRate: number;
-  ivaRate: number;
-  igtfRate: number;
-  currency: 'VES' | 'USD';
-  cashOpening?: CashOpening;
+export interface Comanda {
+  id: number;
+  tableId: number;
+  tableName: string;
+  items: SaleItem[];
+  status: 'pending' | 'in_progress' | 'ready' | 'delivered' | 'cancelled';
+  serviceCharge: number;
+  createdAt: string;
+  updatedAt: string;
+  sentToKitchen: boolean;
+  notes?: string;
+}
+
+export interface Table {
+  id: number;
+  number: number;
+  name: string;
+  capacity: number;
+  status: 'free' | 'occupied' | 'reserved';
+  currentOrderId?: number;
 }
 
 export interface InventoryMovement {
@@ -131,13 +200,18 @@ export interface InventoryMovement {
   notes?: string;
 }
 
-export interface Comanda {
-  id: number;
-  tableId: number;
-  items: any[];
-  status: 'pending' | 'in_progress' | 'ready' | 'delivered' | 'cancelled';
-  createdAt: string;
-  updatedAt: string;
+export interface Config {
+  businessName: string;
+  rif: string;
+  address: string;
+  phone: string;
+  exchangeRate: number;
+  exchangeRateUpdatedAt: string;
+  ivaRate: number;
+  igtfRate: number;
+  currency: 'VES' | 'USD';
+  cashDrawer?: CashDrawer;
+  lastCashClosing?: CashDrawer;
 }
 
 export interface AppStore {
@@ -147,8 +221,47 @@ export interface AppStore {
   brands: Brand[];
   products: Product[];
   customers: Customer[];
+  suppliers: Supplier[];
+  terminals: Terminal[];
   sales: Sale[];
   comandas: Comanda[];
+  tables: Table[];
   movements: InventoryMovement[];
+  cashDrawers: CashDrawer[];
   config: Config;
+}
+
+export interface ZReport {
+  cashDrawerId: number;
+  date: string;
+  openingTime: string;
+  closingTime: string;
+  initialVES: number;
+  initialUSD: number;
+  finalVES: number;
+  finalUSD: number;
+  expectedVES: number;
+  expectedUSD: number;
+  differenceVES: number;
+  differenceUSD: number;
+  salesByPaymentMethod: {
+    cash_ves: number;
+    cash_usd: number;
+    card: number;
+    biopago: number;
+    zelle_usd: number;
+    pagomovil: number;
+    credit: number;
+  };
+  totalSalesVES: number;
+  totalSalesUSD: number;
+  refundsByPaymentMethod: {
+    cash_ves: number;
+    cash_usd: number;
+    pagomovil: number;
+  };
+  totalRefundsVES: number;
+  totalRefundsUSD: number;
+  netSalesVES: number;
+  netSalesUSD: number;
 }
