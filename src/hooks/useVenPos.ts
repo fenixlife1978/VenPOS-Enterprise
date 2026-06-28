@@ -51,12 +51,17 @@ const INITIAL_DATA: AppStore = {
   sales: [],
   comandas: [],
   movements: [],
+  cashDrawers: [],
+  tables: [],
+  suppliers: [],
+  terminals: [],
   config: {
     businessName: 'VenPOS Corporativo C.A.',
     rif: 'J-12345678-9',
     address: 'Av. Principal, Caracas, Venezuela',
     phone: '0212-1234567',
     exchangeRate: 36.50,
+    exchangeRateUpdatedAt: new Date().toISOString(),
     ivaRate: 16,
     igtfRate: 3,
     currency: 'VES'
@@ -71,7 +76,7 @@ export function useVenPos() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem('venpos_data_v2');
+    const saved = localStorage.getItem('venpos_data_v3');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -83,22 +88,21 @@ export function useVenPos() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('venpos_data_v2', JSON.stringify(store));
+    localStorage.setItem('venpos_data_v3', JSON.stringify(store));
   }, [store]);
 
-  const updateStore = useCallback((updater: (prev: AppStore) => AppStore) => {
-    setStore(prev => updater(prev));
+  const updateStore = useCallback((updater: (prev: AppStore) => AppStore | any) => {
+    setStore(prev => {
+      const newState = typeof updater === 'function' ? updater(prev) : updater;
+      return newState;
+    });
   }, []);
 
   const login = (username: string, password?: string) => {
-    const user = store.users.find(u => u.username === username && u.password === password && u.active);
+    const user = store.users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password && u.active);
     if (user) {
       const loggedUser = { ...user, lastLogin: new Date().toISOString() };
       setCurrentUser(loggedUser);
-      updateStore(prev => ({
-        ...prev,
-        users: prev.users.map(u => u.id === user.id ? loggedUser : u)
-      }));
       return true;
     }
     return false;
@@ -110,7 +114,7 @@ export function useVenPos() {
   };
 
   const addSale = (sale: Sale) => {
-    updateStore(prev => ({
+    updateStore((prev: AppStore) => ({
       ...prev,
       sales: [...prev.sales, sale],
       products: prev.products.map(p => {
@@ -121,7 +125,6 @@ export function useVenPos() {
   };
 
   const formatMoney = useCallback((amount: number, overrideCurrency?: 'VES' | 'USD') => {
-    // Validación de seguridad para evitar errores de undefined/null/NaN
     const safeAmount = (typeof amount !== 'number' || isNaN(amount)) ? 0 : amount;
     const c = overrideCurrency || currency;
     
