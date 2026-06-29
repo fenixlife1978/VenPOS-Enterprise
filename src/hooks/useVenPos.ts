@@ -119,31 +119,10 @@ export function useVenPos() {
     });
   }, []);
 
-  const login = (username: string, password?: string, openingData?: any) => {
+  const login = (username: string, password?: string) => {
     const user = store.users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password && u.active);
     if (user) {
       const loggedUser = { ...user, lastLogin: new Date().toISOString() };
-      
-      if (openingData && user.role === 'cashier') {
-        const fullOpeningData = {
-          ...openingData,
-          userId: user.id,
-          userName: user.fullName,
-          isOpen: true
-        };
-        
-        updateStore((prev: any) => ({
-          ...prev,
-          config: {
-            ...prev.config,
-            exchangeRate: fullOpeningData.exchangeRate || prev.config.exchangeRate,
-            exchangeRateUpdatedAt: new Date().toISOString(),
-            cashDrawer: fullOpeningData
-          },
-          cashDrawers: [...(prev.cashDrawers || []), fullOpeningData]
-        }));
-      }
-      
       setCurrentUser(loggedUser);
       return true;
     }

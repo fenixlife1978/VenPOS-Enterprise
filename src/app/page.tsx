@@ -29,7 +29,7 @@ export default function HomePage() {
   }, [currentUser, activeModule, setActiveModule]);
 
   if (!currentUser) {
-    return <Login onLogin={login} store={store} />;
+    return <Login onLogin={login} />;
   }
 
   if (currentUser.role === 'cashier') {
@@ -48,7 +48,6 @@ export default function HomePage() {
     );
   }
 
-  // Admin: pasar updateStore al DashboardAdmin
   return (
     <DashboardAdmin 
       activeModule={activeModule}
