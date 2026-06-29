@@ -29,7 +29,7 @@ export default function HomePage() {
   }, [currentUser, activeModule, setActiveModule]);
 
   if (!currentUser) {
-    return <Login onLogin={login} />;
+    return <Login onLogin={login} store={store} />;
   }
 
   if (currentUser.role === 'cashier') {
