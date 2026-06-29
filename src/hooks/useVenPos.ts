@@ -4,7 +4,8 @@ import type { AppStore, User, Product, Category, Customer, Sale, Config, Alterna
 const INITIAL_DATA: AppStore = {
   users: [
     { id: 1, username: 'admin', password: 'admin', fullName: 'Administrador', role: 'admin', active: true, lastLogin: new Date().toISOString() },
-    { id: 2, username: 'cajero', password: 'cajero', fullName: 'Cajero Principal', role: 'cashier', active: true, lastLogin: null }
+    { id: 2, username: 'cajero', password: 'cajero', fullName: 'Cajero Principal', role: 'cashier', active: true, lastLogin: null },
+    { id: 3, username: 'cocina', password: '123', fullName: 'Chef Principal', role: 'kitchen', active: true, lastLogin: null }
   ],
   categories: [
     { id: 1, name: 'General', departmentId: 1, description: 'Productos generales' },

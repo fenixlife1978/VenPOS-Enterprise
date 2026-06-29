@@ -73,7 +73,7 @@ export interface User {
   username: string;
   password: string;
   fullName: string;
-  role: 'admin' | 'cashier' | 'seller';
+  role: 'admin' | 'cashier' | 'kitchen' | 'seller';
   active: boolean;
   lastLogin: string | null;
 }
