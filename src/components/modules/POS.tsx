@@ -72,6 +72,7 @@ interface POSProps {
   addSale: (sale: Sale) => void;
   updateStore: (updater: any) => void;
   currentUser: any;
+  onLogout: () => void;
 }
 
 interface CartItem {
@@ -84,7 +85,7 @@ interface CartItem {
   priceType: string;
 }
 
-export default function POS({ store, currency, formatMoney: formatMoneyFn, addSale, updateStore, currentUser }: POSProps) {
+export default function POS({ store, currency, formatMoney: formatMoneyFn, addSale, updateStore, currentUser, onLogout }: POSProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(store.customers?.[0] || null);
@@ -243,7 +244,8 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
     { icon: Users, label: 'CLIENTE', onClick: () => setActiveModal('customer') },
     { icon: RefreshCw, label: 'NUEVO', onClick: () => { setCart([]); setSelectedCustomer(store.customers[0]); } },
     { icon: HelpCircle, label: 'AYUDA', onClick: () => setActiveModal('help') },
-    { icon: Settings, label: 'CONFIG', onClick: () => setActiveModal('config') }
+    { icon: Settings, label: 'CONFIG', onClick: () => setActiveModal('config') },
+    { icon: LogOut, label: 'SALIR', onClick: onLogout }
   ];
 
   return (
@@ -251,14 +253,23 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
       {/* Columna Izquierda (1/3) - Panel de Control */}
       <div className="w-[340px] flex-shrink-0 bg-[#0a1628] flex flex-col h-full border-r border-white/10">
         <div className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#c9a227] rounded-full flex items-center justify-center text-[#0a1628] font-black text-xl">
-              P
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#c9a227] rounded-full flex items-center justify-center text-[#0a1628] font-black text-xl">
+                P
+              </div>
+              <div>
+                <h1 className="text-white font-black text-lg leading-none">VenPOS</h1>
+                <p className="text-white/40 text-[10px] uppercase font-bold mt-1">Sistema Corporativo</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-white font-black text-lg leading-none">VenPOS</h1>
-              <p className="text-white/40 text-[10px] uppercase font-bold mt-1">Sistema Corporativo</p>
-            </div>
+            <button 
+              onClick={onLogout}
+              className="p-2 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+              title="Cerrar Sesión"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
 
           <div className="mt-8 relative" ref={searchRef}>
@@ -302,10 +313,15 @@ export default function POS({ store, currency, formatMoney: formatMoneyFn, addSa
               <button
                 key={idx}
                 onClick={btn.onClick}
-                className="aspect-square flex flex-col items-center justify-center gap-2 rounded-xl bg-[#c9a227] hover:bg-[#d4b43a] transition-all"
+                className={cn(
+                  "aspect-square flex flex-col items-center justify-center gap-2 rounded-xl transition-all",
+                  btn.label === 'SALIR' 
+                    ? "bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white" 
+                    : "bg-[#c9a227] hover:bg-[#d4b43a] text-[#0a1628]"
+                )}
               >
-                <btn.icon className="w-5 h-5 text-[#0a1628]" />
-                <span className="text-[9px] font-black text-[#0a1628] uppercase tracking-tighter">{btn.label}</span>
+                <btn.icon className="w-5 h-5" />
+                <span className="text-[9px] font-black uppercase tracking-tighter">{btn.label}</span>
               </button>
             ))}
           </div>

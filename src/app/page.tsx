@@ -42,6 +42,7 @@ export default function HomePage() {
           addSale={addSale}
           updateStore={updateStore}
           currentUser={currentUser}
+          onLogout={logout}
         />
       </div>
     );
