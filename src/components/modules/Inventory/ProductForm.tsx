@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   X, Plus, Check, DollarSign, RefreshCw, Printer, Scan,
-  Hash, Box, Tag, Barcode, Eye, EyeOff, Save, FilePlus
+  Hash, Box, Tag, Barcode, Eye, EyeOff, Save, FilePlus, Wrench, Fuel
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -23,11 +23,11 @@ interface ProductFormProps {
   editingProduct?: any | null;
 }
 
-const unidades = ['unidad', 'kilogramo', 'litro', 'caja', 'paquete', 'docena', 'botella', 'lata', 'metro', 'gramo', 'mililitro', 'galón', 'saco', 'rollo'];
-const tiposArticulo = ['Producto', 'Servicio', 'Combo/Kit', 'Materia Prima', 'Consumible', 'Repuesto'];
+const unidades = ['unidad', 'litro', 'galón', 'cuarto', 'paila', 'kit', 'juego', 'par', 'metro', 'kilogramo', 'gramo', 'tambor'];
+const tiposArticulo = ['Repuesto', 'Lubricante', 'Filtro', 'Químico', 'Accesorio', 'Batería', 'Caucho', 'Freno', 'Suspensión', 'Motor', 'Eléctrico', 'Transmisión', 'Servicio'];
 const tiposImpuesto = ['Gravado', 'Exento', 'No Aplica'];
-const colores = ['Negro', 'Blanco', 'Rojo', 'Azul', 'Verde', 'Amarillo', 'Gris', 'Plateado', 'Dorado', 'Otro'];
-const tallas = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Única', '28', '30', '32', '34', '36', '38', '40', 'Otra'];
+const colores = ['No Aplica', 'Negro', 'Gris', 'Cromo', 'Rojo', 'Azul', 'Blanco', 'Ámbar'];
+const tallas = ['N/A', 'Estándar', '0.10', '0.20', '0.30', '0.40', '0.50', '20', '30', '40', '50', '60'];
 
 // Input sin flechas de spinner
 const CleanInput = React.forwardRef<any, any>(
@@ -71,14 +71,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     alternateCode: '',
     description: '',
     shortDescription: '',
-    type: 'Producto',
+    type: 'Repuesto',
     groupId: 0,
     subgroupId: 0,
     brandId: 0,
     lineId: 0,
     model: '',
-    color: '',
-    size: '',
+    color: 'No Aplica',
+    size: 'N/A',
     supplierId: 0,
     supplierCode: '',
     mainUnit: 'unidad',
@@ -223,14 +223,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         alternateCode: editingProduct.alternateCode || '',
         description: editingProduct.description || '',
         shortDescription: editingProduct.shortDescription || '',
-        type: editingProduct.type || 'Producto',
+        type: editingProduct.type || 'Repuesto',
         groupId: editingProduct.groupId || 0,
         subgroupId: editingProduct.subgroupId || 0,
         brandId: editingProduct.brandId || 0,
         lineId: editingProduct.lineId || 0,
         model: editingProduct.model || '',
-        color: editingProduct.color || '',
-        size: editingProduct.size || '',
+        color: editingProduct.color || 'No Aplica',
+        size: editingProduct.size || 'N/A',
         supplierId: editingProduct.supplierId || 0,
         supplierCode: editingProduct.supplierCode || '',
         mainUnit: editingProduct.unit || 'unidad',
@@ -265,7 +265,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const resetForm = () => {
     setFormData({
       barcode: '', internalCode: '', alternateCode: '', description: '', shortDescription: '',
-      type: 'Producto', groupId: 0, subgroupId: 0, brandId: 0, lineId: 0, model: '', color: '', size: '',
+      type: 'Repuesto', groupId: 0, subgroupId: 0, brandId: 0, lineId: 0, model: '', color: 'No Aplica', size: 'N/A',
       supplierId: 0, supplierCode: '',
       mainUnit: 'unidad', altUnit: '', conversionFactor: '', stock: '', minStock: '', maxStock: '',
       reorderPoint: '', warehouse: '', managesLots: false, managesSerials: false, managesExpiration: false,
@@ -314,7 +314,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   const buildProduct = () => {
     if (!formData.description || !formData.internalCode) {
-      alert('Complete código interno y descripción');
+      alert('Complete código de parte y descripción');
       return null;
     }
 
@@ -403,7 +403,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             {formData.barcode}
           </div>
           <div className="h-8 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxwYXR0ZXJuIGlkPSJiYXIiIHdpZHRoPSI0IiBoZWlnaHQ9IjEwMCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHJlY3Qgd2lkdGg9IjEiIGhlaWdodD0iMTAwIiBmaWxsPSIjMDAwIi8+PC9wYXR0ZXJuPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjYmFyKSIvPjwvc3ZnPg==')] bg-repeat-x bg-contain"></div>
-          <div className="text-[9px] text-black font-bold mt-1">{formData.shortDescription || formData.description || 'Producto'}</div>
+          <div className="text-[9px] text-black font-bold mt-1">{formData.shortDescription || formData.description || 'Repuesto'}</div>
         </>
       ) : (
         <div className="text-black font-bold text-xs py-2">Escanee o ingrese código</div>
@@ -432,15 +432,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-6xl p-0 rounded-xl overflow-hidden bg-[#d4d4d4] border-gray-400 max-h-[95vh]">
-          <DialogTitle className="sr-only">{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</DialogTitle>
+          <DialogTitle className="sr-only">{editingProduct ? 'Editar Repuesto/Lubricante' : 'Nuevo Repuesto/Lubricante'}</DialogTitle>
           
           <div className="bg-[#0a1628] px-4 py-3 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-[#c9a227] rounded-lg flex items-center justify-center">
-                <Barcode className="w-4 h-4 text-[#0a1628]" />
+                {formData.type === 'Lubricante' ? <Fuel className="w-4 h-4 text-[#0a1628]" /> : <Wrench className="w-4 h-4 text-[#0a1628]" />}
               </div>
-              <span className="text-white font-bold text-sm">
-                {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
+              <span className="text-white font-bold text-sm uppercase tracking-tight">
+                {editingProduct ? 'Editar Artículo' : 'Registro de Repuestos y Lubricantes'}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -449,7 +449,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 className="text-white hover:text-white text-xs flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-white/10 transition-colors font-bold"
               >
                 {showPreview ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                Preview
+                PREVIEW
               </button>
               <button onClick={onClose} className="text-white/40 hover:text-white p-1 hover:bg-white/10 rounded-lg transition-colors">
                 <X className="w-4 h-4" />
@@ -462,12 +462,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               
               <div className="bg-white rounded-xl p-4 shadow-sm">
                 <h3 className="text-xs font-black uppercase text-black mb-3 flex items-center gap-2 border-b border-gray-100 pb-2">
-                  <Hash className="w-4 h-4 text-[#c9a227]" /> Identificación
+                  <Hash className="w-4 h-4 text-[#c9a227]" /> Identificación del Repuesto
                 </h3>
                 
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Código de Barras</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Código de Barras (EAN/UPC)</Label>
                     <div className="flex gap-2">
                       <CleanInput 
                         value={formData.barcode} 
@@ -484,20 +484,20 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   
                   <div className="space-y-3">
                     <div className="space-y-1">
-                      <Label className="text-[10px] font-black uppercase text-black">Código Interno *</Label>
+                      <Label className="text-[10px] font-black uppercase text-black">Código de Parte (Interno) *</Label>
                       <CleanInput 
                         value={formData.internalCode} 
                         onChange={(e: any) => setFormData(prev => ({ ...prev, internalCode: e.target.value }))}
-                        placeholder="PROD-001" 
+                        placeholder="EX: 12345-ABC" 
                         className="h-9 text-sm bg-white rounded-lg font-mono font-bold" 
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[10px] font-black uppercase text-black">Código Alterno</Label>
+                      <Label className="text-[10px] font-black uppercase text-black">Código OEM / Referencia Alterna</Label>
                       <CleanInput 
                         value={formData.alternateCode} 
                         onChange={(e: any) => setFormData(prev => ({ ...prev, alternateCode: e.target.value }))}
-                        placeholder="REF-ALT-001" 
+                        placeholder="Original Equipment Manufacturer Code" 
                         className="h-9 text-sm bg-white rounded-lg font-mono" 
                       />
                     </div>
@@ -506,22 +506,22 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Descripción Completa *</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Descripción Técnica Completa *</Label>
                     <Textarea 
                       value={formData.description} 
                       onChange={(e: any) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                       rows={3}
-                      placeholder="Descripción detallada del producto para inventario..." 
+                      placeholder="Ej: Kit de Embrague para Toyota Corolla 1.8 (2009-2014)" 
                       className="text-sm bg-white rounded-lg resize-none" 
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Descripción Corta (Recibos)</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Nombre para Informe/Recibo</Label>
                     <Textarea 
                       value={formData.shortDescription} 
                       onChange={(e: any) => setFormData(prev => ({ ...prev, shortDescription: e.target.value }))}
                       rows={3}
-                      placeholder="Nombre corto para tickets y recibos..." 
+                      placeholder="Nombre resumido para etiquetas y tickets..." 
                       className="text-sm bg-white rounded-lg resize-none" 
                     />
                   </div>
@@ -529,7 +529,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
                 <div className="grid grid-cols-3 gap-4 mb-3">
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Tipo de Artículo</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Categoría de Artículo</Label>
                     <Select value={formData.type} onValueChange={(v) => setFormData(prev => ({ ...prev, type: v }))}>
                       <SelectTrigger className="h-9 bg-white rounded-lg text-sm border-gray-200">
                         <SelectValue />
@@ -539,7 +539,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   </div>
                   
                   <SelectWithAdd 
-                    label="Grupo"
+                    label="Familia / Grupo"
                     value={formData.groupId?.toString() ?? ''}
                     onChange={(v: any) => setFormData(prev => ({ ...prev, groupId: parseInt(v) || 0, subgroupId: 0 }))}
                     options={(store.groups || [])?.map((g: any) => <SelectItem key={g.id} value={g.id.toString()}>{g.name}</SelectItem>)}
@@ -547,7 +547,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   />
                   
                   <SelectWithAdd 
-                    label="Sub-Grupo"
+                    label="Sub-Familia"
                     value={formData.subgroupId?.toString() ?? ''}
                     onChange={(v: any) => setFormData(prev => ({ ...prev, subgroupId: parseInt(v) || 0 }))}
                     options={filteredSubgroups?.map((s: any) => <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>)}
@@ -557,7 +557,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
                 <div className="grid grid-cols-3 gap-4 mb-3">
                   <SelectWithAdd 
-                    label="Marca"
+                    label="Marca (Vehículo / Fabricante)"
                     value={formData.brandId?.toString() ?? ''}
                     onChange={(v: any) => setFormData(prev => ({ ...prev, brandId: parseInt(v) || 0 }))}
                     options={(store.brands || [])?.map((b: any) => <SelectItem key={b.id} value={b.id.toString()}>{b.name}</SelectItem>)}
@@ -565,7 +565,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   />
                   
                   <SelectWithAdd 
-                    label="Línea"
+                    label="Línea de Producto"
                     value={formData.lineId?.toString() ?? ''}
                     onChange={(v: any) => setFormData(prev => ({ ...prev, lineId: parseInt(v) || 0 }))}
                     options={(store.lines || [])?.map((l: any) => <SelectItem key={l.id} value={l.id.toString()}>{l.name}</SelectItem>)}
@@ -573,11 +573,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   />
                   
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Modelo</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Modelo / Aplicación / Año</Label>
                     <CleanInput 
                       value={formData.model} 
                       onChange={(e: any) => setFormData(prev => ({ ...prev, model: e.target.value }))}
-                      placeholder="Modelo 2024" 
+                      placeholder="EX: Corolla 2009-2014" 
                       className="h-9 text-sm bg-white rounded-lg" 
                     />
                   </div>
@@ -585,7 +585,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
                 <div className="grid grid-cols-4 gap-4">
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Color</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Color / Acabado</Label>
                     <Select value={formData.color} onValueChange={(v) => setFormData(prev => ({ ...prev, color: v }))}>
                       <SelectTrigger className="h-9 bg-white rounded-lg text-sm border-gray-200">
                         <SelectValue placeholder="Seleccione" />
@@ -595,7 +595,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   </div>
                   
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Talla</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Medida / Talla / Grado</Label>
                     <Select value={formData.size} onValueChange={(v) => setFormData(prev => ({ ...prev, size: v }))}>
                       <SelectTrigger className="h-9 bg-white rounded-lg text-sm border-gray-200">
                         <SelectValue placeholder="Seleccione" />
@@ -613,11 +613,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   />
                   
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Código Proveedor</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Cod. Parte Proveedor</Label>
                     <CleanInput 
                       value={formData.supplierCode} 
                       onChange={(e: any) => setFormData(prev => ({ ...prev, supplierCode: e.target.value }))}
-                      placeholder="COD-PROV" 
+                      placeholder="Referencia Proveedor" 
                       className="h-9 text-sm bg-white rounded-lg font-mono" 
                     />
                   </div>
@@ -626,12 +626,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
               <div className="bg-white rounded-xl p-4 shadow-sm">
                 <h3 className="text-xs font-black uppercase text-black mb-3 flex items-center gap-2 border-b border-gray-100 pb-2">
-                  <Box className="w-4 h-4 text-[#c9a227]" /> Unidades & Stock
+                  <Box className="w-4 h-4 text-[#c9a227]" /> Inventario & Almacén
                 </h3>
                 
                 <div className="grid grid-cols-3 gap-4 mb-3">
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Unidad Principal</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Unidad de Despacho</Label>
                     <Select value={formData.mainUnit} onValueChange={(v) => setFormData(prev => ({ ...prev, mainUnit: v }))}>
                       <SelectTrigger className="h-9 bg-white rounded-lg text-sm border-gray-200">
                         <SelectValue />
@@ -641,7 +641,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   </div>
                   
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Unidad Alterna</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Unidad de Compra (Empaque)</Label>
                     <Select value={formData.altUnit} onValueChange={(v) => setFormData(prev => ({ ...prev, altUnit: v }))}>
                       <SelectTrigger className="h-9 bg-white rounded-lg text-sm border-gray-200">
                         <SelectValue placeholder="Opcional" />
@@ -651,7 +651,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   </div>
                   
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Factor Conversión</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Contenido por Empaque</Label>
                     <CleanInput 
                       type="number"
                       value={formData.conversionFactor} 
@@ -664,7 +664,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
                 <div className="grid grid-cols-5 gap-4 mb-3">
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Stock Inicial</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Existencia Inicial</Label>
                     <CleanInput 
                       type="number"
                       value={formData.stock} 
@@ -675,7 +675,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Stock Mínimo</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Alerta Stock Mín.</Label>
                     <CleanInput 
                       type="number"
                       value={formData.minStock} 
@@ -685,17 +685,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Stock Máximo</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Tope Stock Máx.</Label>
                     <CleanInput 
                       type="number"
                       value={formData.maxStock} 
                       onChange={(e: any) => setFormData(prev => ({ ...prev, maxStock: e.target.value }))}
-                      placeholder="1000"
+                      placeholder="100"
                       className="h-9 text-sm bg-white rounded-lg" 
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Punto Reorden</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Pedir en:</Label>
                     <CleanInput 
                       type="number"
                       value={formData.reorderPoint} 
@@ -705,11 +705,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Depósito/Ubicación</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Ubicación (Pasillo/Gaveta)</Label>
                     <CleanInput 
                       value={formData.warehouse} 
                       onChange={(e: any) => setFormData(prev => ({ ...prev, warehouse: e.target.value }))}
-                      placeholder="Almacén A" 
+                      placeholder="P-01 G-02" 
                       className="h-9 text-sm bg-white rounded-lg" 
                     />
                   </div>
@@ -722,7 +722,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       onCheckedChange={(v) => setFormData(prev => ({ ...prev, managesLots: v as boolean }))} 
                       className="w-4 h-4" 
                     />
-                    <span className="text-xs font-black text-black">Maneja Lotes</span>
+                    <span className="text-xs font-black text-black uppercase">Maneja Lotes / Cargas</span>
                   </label>
                   <label className="flex items-center gap-2 bg-gray-50 rounded-lg px-4 py-2 border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors">
                     <Checkbox 
@@ -730,7 +730,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       onCheckedChange={(v) => setFormData(prev => ({ ...prev, managesSerials: v as boolean }))} 
                       className="w-4 h-4" 
                     />
-                    <span className="text-xs font-black text-black">Maneja Seriales</span>
+                    <span className="text-xs font-black text-black uppercase">Maneja Seriales / Chasis</span>
                   </label>
                   <label className="flex items-center gap-2 bg-gray-50 rounded-lg px-4 py-2 border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors">
                     <Checkbox 
@@ -738,19 +738,19 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       onCheckedChange={(v) => setFormData(prev => ({ ...prev, managesExpiration: v as boolean }))} 
                       className="w-4 h-4" 
                     />
-                    <span className="text-xs font-black text-black">Maneja Vencimiento</span>
+                    <span className="text-xs font-black text-black uppercase">Control de Vencimiento</span>
                   </label>
                 </div>
               </div>
 
               <div className="bg-white rounded-xl p-4 shadow-sm">
                 <h3 className="text-xs font-black uppercase text-black mb-3 flex items-center gap-2 border-b border-gray-100 pb-2">
-                  <DollarSign className="w-4 h-4 text-[#c9a227]" /> Precios & IVA
+                  <DollarSign className="w-4 h-4 text-[#c9a227]" /> Estructura de Costos & Precios
                 </h3>
 
                 <div className="grid grid-cols-6 gap-4 mb-4">
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Tipo Impuesto</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Impuesto</Label>
                     <Select value={formData.taxType} onValueChange={(v) => setFormData(prev => ({ ...prev, taxType: v }))}>
                       <SelectTrigger className="h-9 bg-white rounded-lg text-sm border-gray-200">
                         <SelectValue />
@@ -779,7 +779,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Descuento Máx.</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Desc. Máx.</Label>
                     <CleanInput 
                       type="number"
                       step="0.1" 
@@ -790,7 +790,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Costo USD</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Costo USD (FOB)</Label>
                     <CleanInput 
                       type="number"
                       step="0.0001" 
@@ -801,7 +801,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">% Margen Sobre Venta</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">% Margen Bruto</Label>
                     <div className="flex gap-1">
                       <CleanInput 
                         type="number"
@@ -816,7 +816,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                         variant="outline" 
                         onClick={() => handleMarginChange(marginPercent)} 
                         className="h-9 w-9 bg-white border-gray-300 shrink-0"
-                        title="Recalcular precios"
+                        title="Recalcular tabla de precios"
                       >
                         <RefreshCw className="w-4 h-4" />
                       </Button>
@@ -828,11 +828,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   <table className="w-full text-xs">
                     <thead className="bg-gray-100 text-black font-black uppercase">
                       <tr>
-                        <th className="px-3 py-2 text-left w-1/4">Precio</th>
-                        <th className="px-3 py-2 text-center w-24">Con IVA</th>
-                        <th className="px-3 py-2 text-right">USD</th>
-                        <th className="px-3 py-2 text-right">Bs.</th>
-                        <th className="px-3 py-2 text-right w-24">Margen Venta</th>
+                        <th className="px-3 py-2 text-left w-1/4">Escalafón de Venta</th>
+                        <th className="px-3 py-2 text-center w-24">Precio + IVA</th>
+                        <th className="px-3 py-2 text-right">Precio USD</th>
+                        <th className="px-3 py-2 text-right">Precio Bs.</th>
+                        <th className="px-3 py-2 text-right w-24">Utilidad %</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -888,16 +888,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   </table>
                 </div>
                 <div className="mt-2 flex justify-between items-center">
-                  <span className="text-[10px] text-black font-black">
-                    Fórmula: Precio = Costo / (1 - Margen%)
+                  <span className="text-[10px] text-black font-black uppercase">
+                    Fórmula Automática: PV = Costo / (1 - Margen%)
                   </span>
-                  <Badge variant="outline" className="text-[10px] text-black font-black border-black">Tasa BCV: {store.config.exchangeRate} Bs/USD</Badge>
+                  <Badge variant="outline" className="text-[10px] text-black font-black border-black">TASA VIGENTE: {store.config.exchangeRate} Bs/USD</Badge>
                 </div>
               </div>
 
               <div className="bg-white rounded-xl p-4 shadow-sm">
                 <h3 className="text-xs font-black uppercase text-black mb-3 flex items-center gap-2 border-b border-gray-100 pb-2">
-                  <Tag className="w-4 h-4 text-[#c9a227]" /> Adicional
+                  <Tag className="w-4 h-4 text-[#c9a227]" /> Datos Adicionales (Logística)
                 </h3>
                 
                 <div className="grid grid-cols-4 gap-4 mb-3">
@@ -935,45 +935,45 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Estado</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Estado del Artículo</Label>
                     <div className="flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200 h-9">
                       <Switch 
                         checked={formData.active} 
                         onCheckedChange={(v) => setFormData(prev => ({ ...prev, active: v }))} 
                         className="scale-75" 
                       />
-                      <span className="text-xs font-black text-black">{formData.active ? 'Activo' : 'Inactivo'}</span>
+                      <span className="text-xs font-black text-black uppercase">{formData.active ? 'Habilitado' : 'Deshabilitado'}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Etiqueta Barcode (Imprimible)</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Contenido Etiqueta Barcode</Label>
                     <div className="flex gap-2">
                       <CleanInput 
                         value={formData.barcodeLabel} 
                         onChange={(e: any) => setFormData(prev => ({ ...prev, barcodeLabel: e.target.value }))}
-                        placeholder="Texto para etiqueta" 
+                        placeholder="Texto para impresión térmica" 
                         className="h-9 text-sm bg-white rounded-lg flex-1" 
                       />
                       <Button 
                         size="icon" 
                         variant="outline" 
                         className="h-9 w-9 bg-white border-gray-300 shrink-0" 
-                        title="Imprimir etiqueta"
+                        title="Probar impresión de etiqueta"
                       >
                         <Printer className="w-4 h-4 text-black" />
                       </Button>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Observaciones</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Observaciones / Notas Internas</Label>
                     <Textarea 
                       value={formData.observations} 
                       onChange={(e: any) => setFormData(prev => ({ ...prev, observations: e.target.value }))}
                       rows={2}
-                      placeholder="Notas internas sobre el producto..." 
+                      placeholder="Detalles sobre compatibilidad, fragilidad o proveedor..." 
                       className="text-sm bg-white rounded-lg resize-none" 
                     />
                   </div>
@@ -983,28 +983,28 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               {!editingProduct && (
                 <div className="bg-white rounded-xl p-4 shadow-sm flex flex-col items-center gap-3">
                   <h3 className="text-xs font-black uppercase text-black flex items-center gap-2">
-                    <Check className="w-4 h-4 text-[#c9a227]" /> Finalizar Creación
+                    <Check className="w-4 h-4 text-[#c9a227]" /> Confirmar Registro
                   </h3>
-                  <p className="text-[10px] text-black text-center font-black">
-                    Verifique todos los datos antes de crear el producto. Una vez creado, podrá gestionar su stock y ventas.
+                  <p className="text-[10px] text-black text-center font-black uppercase">
+                    Verifique que los códigos de parte y precios sean correctos antes de guardar.
                   </p>
                   <div className="flex gap-3">
                     <Button 
                       size="default"
                       variant="outline"
                       onClick={() => handleSubmit(true)} 
-                      className="rounded-xl text-sm border-[#c9a227] text-[#c9a227] hover:bg-[#c9a227] hover:text-[#0a1628] px-6 h-10 font-black"
+                      className="rounded-xl text-sm border-[#c9a227] text-[#c9a227] hover:bg-[#c9a227] hover:text-[#0a1628] px-6 h-10 font-black uppercase"
                     >
                       <FilePlus className="w-4 h-4 mr-2" />
-                      Crear y Nuevo
+                      Guardar y Seguir
                     </Button>
                     <Button 
                       size="default"
                       onClick={() => handleSubmit(false)} 
-                      className="bg-[#0a1628] hover:bg-[#1e3a5f] text-white rounded-xl text-sm font-black px-8 h-10"
+                      className="bg-[#0a1628] hover:bg-[#1e3a5f] text-white rounded-xl text-sm font-black px-8 h-10 uppercase"
                     >
                       <Save className="w-4 h-4 mr-2" />
-                      Crear Producto
+                      Registrar Artículo
                     </Button>
                   </div>
                 </div>
@@ -1013,27 +1013,27 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
             {showPreview && (
               <div className="w-72 bg-gray-100 border-l border-gray-300 p-4 space-y-4 overflow-y-auto">
-                <h4 className="text-xs font-black uppercase text-black border-b border-gray-300 pb-2">VISTA PREVIA</h4>
+                <h4 className="text-xs font-black uppercase text-black border-b border-gray-300 pb-2 tracking-widest">VISTA PREVIA TÉCNICA</h4>
                 
                 <div className="bg-white rounded-xl p-3 shadow-sm">
-                  <div className="text-[10px] text-black uppercase font-black mb-2">CÓDIGO DE BARRAS</div>
+                  <div className="text-[10px] text-black uppercase font-black mb-2">IDENTIFICADOR VISUAL</div>
                   <BarcodePreview />
                 </div>
 
                 <div className="bg-white rounded-xl p-3 shadow-sm">
-                  <div className="text-[10px] text-black uppercase font-black mb-2">RESUMEN DE PRECIOS</div>
+                  <div className="text-[10px] text-black uppercase font-black mb-2">LISTA DE PRECIOS ($/BS)</div>
                   <div className="space-y-2">
                     {prices.map((p, i) => {
                       const usd = parseFloat(p.usd) || 0;
                       const bs = parseFloat(p.bs) || 0;
                       return (
                         <div key={i} className="flex justify-between items-center text-sm">
-                          <span className="text-black text-xs font-black">{p.name.split('-')[0]}</span>
+                          <span className="text-black text-[10px] font-black uppercase">{p.name.split('-')[1].trim()}</span>
                           <div className="text-right">
                             <div className="font-mono font-black text-[#0a1628]">
                               {usd > 0 ? '$' + usd.toFixed(2) : '-'}
                             </div>
-                            <div className="font-mono text-[10px] text-black font-black">
+                            <div className="font-mono text-[9px] text-black font-black">
                               {bs > 0 ? 'Bs. ' + bs.toFixed(2) : '-'}
                             </div>
                           </div>
@@ -1044,31 +1044,27 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 </div>
 
                 <div className="bg-white rounded-xl p-3 shadow-sm">
-                  <div className="text-[10px] text-black uppercase font-black mb-2">STOCK</div>
+                  <div className="text-[10px] text-black uppercase font-black mb-2">RESUMEN DE EXISTENCIA</div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-black font-black">Actual:</span>
+                      <span className="text-xs text-black font-black uppercase">Actual:</span>
                       <Badge className={parseInt(formData.stock) <= parseInt(formData.minStock) ? "bg-red-100 text-red-700 font-black" : "bg-green-100 text-green-700 font-black"}>
-                        {formData.stock || '0'}
+                        {formData.stock || '0'} {formData.mainUnit}
                       </Badge>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-black font-black">Mínimo:</span>
+                      <span className="text-[10px] text-black font-black uppercase">Stock Mínimo:</span>
                       <span className="text-xs font-mono font-black text-black">{formData.minStock || '0'}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-black font-black">Máximo:</span>
-                      <span className="text-xs font-mono font-black text-black">{formData.maxStock || '0'}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-black font-black">Punto reorden:</span>
+                      <span className="text-[10px] text-black font-black uppercase">Punto Reorden:</span>
                       <span className="text-xs font-mono font-black text-black">{formData.reorderPoint || '0'}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-white rounded-xl p-3 shadow-sm">
-                  <div className="text-[10px] text-black uppercase font-black mb-2">MARGEN SOBRE VENTA</div>
+                  <div className="text-[10px] text-black uppercase font-black mb-2">PROYECCIÓN DE MARGEN</div>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div 
@@ -1078,8 +1074,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     </div>
                     <span className="text-xs font-black text-[#0a1628]">{marginPercent || '0'}%</span>
                   </div>
-                  <div className="text-[9px] text-black font-black mt-1">
-                    Ej: Costo $10, Margen 30% = $14.29
+                  <div className="text-[9px] text-black font-black mt-1 uppercase leading-tight">
+                    Utilidad estimada sobre el precio detal (Sin IVA)
                   </div>
                 </div>
               </div>
@@ -1089,26 +1085,24 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           <div className="flex justify-between items-center px-6 py-3 border-t border-gray-300 bg-gray-200 shrink-0">
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-black font-black uppercase">
-                {editingProduct ? 'Editando producto existente' : 'Creando nuevo producto'}
+                {editingProduct ? 'Modo Edición: Actualizando datos de parte' : 'Modo Registro: Nuevo artículo en base de datos'}
               </span>
             </div>
             <div className="flex gap-3">
-              <Button 
-                size="sm" 
-                variant="outline" 
+              <button 
                 onClick={onClose} 
-                className="rounded-lg text-sm border-gray-400 px-4 h-9 font-black text-black"
+                className="rounded-lg text-xs border border-gray-400 bg-white hover:bg-gray-100 px-6 h-9 font-black text-black uppercase transition-colors"
               >
-                Cancelar
-              </Button>
+                CANCELAR
+              </button>
               {editingProduct ? (
                 <Button 
                   size="sm" 
                   onClick={() => handleSubmit(false)} 
-                  className="bg-[#0a1628] hover:bg-[#1e3a5f] text-white rounded-lg text-sm font-black px-6 h-9"
+                  className="bg-[#0a1628] hover:bg-[#1e3a5f] text-white rounded-lg text-xs font-black px-8 h-9 uppercase shadow-md"
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  Actualizar Producto
+                  ACTUALIZAR DATOS
                 </Button>
               ) : (
                 <>
@@ -1116,18 +1110,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     size="sm" 
                     variant="outline"
                     onClick={() => handleSubmit(true)} 
-                    className="rounded-lg text-sm border-[#c9a227] text-[#c9a227] hover:bg-[#c9a227] hover:text-[#0a1628] px-4 h-9 font-black"
+                    className="rounded-lg text-xs border-2 border-[#c9a227] text-[#0a1628] bg-transparent hover:bg-[#c9a227] px-6 h-9 font-black uppercase transition-all"
                   >
                     <FilePlus className="w-4 h-4 mr-2" />
-                    Crear y Nuevo
+                    CREAR Y SEGUIR
                   </Button>
                   <Button 
                     size="sm" 
                     onClick={() => handleSubmit(false)} 
-                    className="bg-[#0a1628] hover:bg-[#1e3a5f] text-white rounded-lg text-sm font-black px-6 h-9"
+                    className="bg-[#0a1628] hover:bg-[#1e3a5f] text-white rounded-lg text-xs font-black px-8 h-9 uppercase shadow-md"
                   >
                     <Save className="w-4 h-4 mr-2" />
-                    Crear Producto
+                    GUARDAR ARTÍCULO
                   </Button>
                 </>
               )}
@@ -1136,98 +1130,99 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </DialogContent>
       </Dialog>
 
+      {/* Mini Modales de Creación Rápida */}
       <Dialog open={modalMarca.open} onOpenChange={(open) => !open && setModalMarca({ open: false, name: '' })}>
         <DialogContent className="max-w-sm bg-gray-200">
-          <DialogTitle className="text-black text-sm font-black">Nueva Marca</DialogTitle>
+          <DialogTitle className="text-black text-xs font-black uppercase">Nueva Marca de Vehículo/Repuesto</DialogTitle>
           <CleanInput 
             value={modalMarca.name} 
             onChange={(e: any) => setModalMarca(prev => ({ ...prev, name: e.target.value }))} 
-            placeholder="Nombre de la marca" 
-            className="bg-white" 
+            placeholder="Nombre de la marca (Ej: Toyota, ACDelco)" 
+            className="bg-white border-2 focus:border-[#c9a227]" 
             autoFocus 
             onKeyDown={(e: any) => { if (e.key === 'Enter') handleCreate('marca', modalMarca); }} 
           />
           <div className="flex justify-end gap-2 mt-3">
-            <Button variant="outline" size="sm" onClick={() => setModalMarca({ open: false, name: '' })} className="font-black">Cancelar</Button>
-            <Button size="sm" onClick={() => handleCreate('marca', modalMarca)} className="bg-[#0a1628] font-black">Crear</Button>
+            <Button variant="outline" size="sm" onClick={() => setModalMarca({ open: false, name: '' })} className="font-black uppercase text-[10px]">Cerrar</Button>
+            <Button size="sm" onClick={() => handleCreate('marca', modalMarca)} className="bg-[#0a1628] font-black uppercase text-[10px]">Crear Marca</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={modalGrupo.open} onOpenChange={(open) => !open && setModalGrupo({ open: false, name: '' })}>
         <DialogContent className="max-w-sm bg-gray-200">
-          <DialogTitle className="text-black text-sm font-black">Nuevo Grupo</DialogTitle>
+          <DialogTitle className="text-black text-xs font-black uppercase">Nueva Familia / Grupo</DialogTitle>
           <CleanInput 
             value={modalGrupo.name} 
             onChange={(e: any) => setModalGrupo(prev => ({ ...prev, name: e.target.value }))} 
-            placeholder="Nombre del grupo" 
-            className="bg-white" 
+            placeholder="Nombre del grupo (Ej: Tren Delantero)" 
+            className="bg-white border-2 focus:border-[#c9a227]" 
             autoFocus 
             onKeyDown={(e: any) => { if (e.key === 'Enter') handleCreate('grupo', modalGrupo); }} 
           />
           <div className="flex justify-end gap-2 mt-3">
-            <Button variant="outline" size="sm" onClick={() => setModalGrupo({ open: false, name: '' })} className="font-black">Cancelar</Button>
-            <Button size="sm" onClick={() => handleCreate('grupo', modalGrupo)} className="bg-[#0a1628] font-black">Crear</Button>
+            <Button variant="outline" size="sm" onClick={() => setModalGrupo({ open: false, name: '' })} className="font-black uppercase text-[10px]">Cerrar</Button>
+            <Button size="sm" onClick={() => handleCreate('grupo', modalGrupo)} className="bg-[#0a1628] font-black uppercase text-[10px]">Crear Grupo</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={modalSubGrupo.open} onOpenChange={(open) => !open && setModalSubGrupo({ open: false, name: '' })}>
         <DialogContent className="max-w-sm bg-gray-200">
-          <DialogTitle className="text-black text-sm font-black">Nuevo Sub-Grupo</DialogTitle>
+          <DialogTitle className="text-black text-xs font-black uppercase">Nueva Sub-Familia</DialogTitle>
           <CleanInput 
             value={modalSubGrupo.name} 
             onChange={(e: any) => setModalSubGrupo(prev => ({ ...prev, name: e.target.value }))} 
-            placeholder="Nombre del sub-grupo" 
-            className="bg-white" 
+            placeholder="Ej: Amortiguadores" 
+            className="bg-white border-2 focus:border-[#c9a227]" 
             autoFocus 
             onKeyDown={(e: any) => { if (e.key === 'Enter') handleCreate('subgrupo', modalSubGrupo); }} 
           />
           <div className="flex justify-end gap-2 mt-3">
-            <Button variant="outline" size="sm" onClick={() => setModalSubGrupo({ open: false, name: '' })} className="font-black">Cancelar</Button>
-            <Button size="sm" onClick={() => handleCreate('subgrupo', modalSubGrupo)} className="bg-[#0a1628] font-black">Crear</Button>
+            <Button variant="outline" size="sm" onClick={() => setModalSubGrupo({ open: false, name: '' })} className="font-black uppercase text-[10px]">Cerrar</Button>
+            <Button size="sm" onClick={() => handleCreate('subgrupo', modalSubGrupo)} className="bg-[#0a1628] font-black uppercase text-[10px]">Crear Sub-Grupo</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={modalLinea.open} onOpenChange={(open) => !open && setModalLinea({ open: false, name: '' })}>
         <DialogContent className="max-w-sm bg-gray-200">
-          <DialogTitle className="text-black text-sm font-black">Nueva Línea</DialogTitle>
+          <DialogTitle className="text-black text-xs font-black uppercase">Nueva Línea de Producto</DialogTitle>
           <CleanInput 
             value={modalLinea.name} 
             onChange={(e: any) => setModalLinea(prev => ({ ...prev, name: e.target.value }))} 
-            placeholder="Nombre de la línea" 
-            className="bg-white" 
+            placeholder="Ej: Línea Pesada / Liviana" 
+            className="bg-white border-2 focus:border-[#c9a227]" 
             autoFocus 
             onKeyDown={(e: any) => { if (e.key === 'Enter') handleCreate('linea', modalLinea); }} 
           />
           <div className="flex justify-end gap-2 mt-3">
-            <Button variant="outline" size="sm" onClick={() => setModalLinea({ open: false, name: '' })} className="font-black">Cancelar</Button>
-            <Button size="sm" onClick={() => handleCreate('linea', modalLinea)} className="bg-[#0a1628] font-black">Crear</Button>
+            <Button variant="outline" size="sm" onClick={() => setModalLinea({ open: false, name: '' })} className="font-black uppercase text-[10px]">Cerrar</Button>
+            <Button size="sm" onClick={() => handleCreate('linea', modalLinea)} className="bg-[#0a1628] font-black uppercase text-[10px]">Crear Línea</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={modalProveedor.open} onOpenChange={(open) => !open && setModalProveedor({ open: false, name: '', code: '' })}>
         <DialogContent className="max-w-sm bg-gray-200">
-          <DialogTitle className="text-black text-sm font-black">Nuevo Proveedor</DialogTitle>
+          <DialogTitle className="text-black text-xs font-black uppercase">Nuevo Proveedor / Mayorista</DialogTitle>
           <CleanInput 
             value={modalProveedor.name} 
             onChange={(e: any) => setModalProveedor(prev => ({ ...prev, name: e.target.value }))} 
-            placeholder="Nombre del proveedor" 
-            className="bg-white mb-2" 
+            placeholder="Razón Social del Proveedor" 
+            className="bg-white border-2 focus:border-[#c9a227] mb-2" 
             autoFocus 
           />
           <CleanInput 
             value={modalProveedor.code} 
             onChange={(e: any) => setModalProveedor(prev => ({ ...prev, code: e.target.value }))} 
-            placeholder="Código del proveedor" 
-            className="bg-white" 
+            placeholder="Código / RIF" 
+            className="bg-white border-2 focus:border-[#c9a227]" 
             onKeyDown={(e: any) => { if (e.key === 'Enter') handleCreate('proveedor', modalProveedor); }} 
           />
           <div className="flex justify-end gap-2 mt-3">
-            <Button variant="outline" size="sm" onClick={() => setModalProveedor({ open: false, name: '', code: '' })} className="font-black">Cancelar</Button>
-            <Button size="sm" onClick={() => handleCreate('proveedor', modalProveedor)} className="bg-[#0a1628] font-black">Crear</Button>
+            <Button variant="outline" size="sm" onClick={() => setModalProveedor({ open: false, name: '', code: '' })} className="font-black uppercase text-[10px]">Cerrar</Button>
+            <Button size="sm" onClick={() => handleCreate('proveedor', modalProveedor)} className="bg-[#0a1628] font-black uppercase text-[10px]">Crear Proveedor</Button>
           </div>
         </DialogContent>
       </Dialog>
