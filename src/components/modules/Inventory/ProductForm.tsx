@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   X, Plus, Check, DollarSign, RefreshCw, Printer, Scan,
-  Hash, Box, Tag, Barcode, Eye, EyeOff, Save, FilePlus, Wrench, Fuel
+  Hash, Box, Tag, Barcode, Eye, EyeOff, Trash2, Save, FilePlus, Wrench, Fuel
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -22,12 +22,6 @@ interface ProductFormProps {
   updateStore: any;
   editingProduct?: any | null;
 }
-
-const unidades = ['unidad', 'litro', 'galón', 'cuarto', 'paila', 'kit', 'juego', 'par', 'metro', 'kilogramo', 'gramo', 'tambor'];
-const tiposArticulo = ['Repuesto', 'Lubricante', 'Filtro', 'Químico', 'Accesorio', 'Batería', 'Caucho', 'Freno', 'Suspensión', 'Motor', 'Eléctrico', 'Transmisión', 'Servicio'];
-const tiposImpuesto = ['Gravado', 'Exento', 'No Aplica'];
-const colores = ['No Aplica', 'Negro', 'Gris', 'Cromo', 'Rojo', 'Azul', 'Blanco', 'Ámbar'];
-const tallas = ['N/A', 'Estándar', '0.10', '0.20', '0.30', '0.40', '0.50', '20', '30', '40', '50', '60'];
 
 // Input sin flechas de spinner
 const CleanInput = React.forwardRef<any, any>(
@@ -48,6 +42,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [scanning, setScanning] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [showPricesWithIVA, setShowPricesWithIVA] = useState([false, false, false, false, false]);
+  
+  // Listas editables localmente
+  const [unidades, setUnidades] = useState(['unidad', 'litro', 'galón', 'cuarto', 'paila', 'kit', 'juego', 'par', 'metro', 'kilogramo', 'gramo', 'tambor']);
+  const [tiposArticulo, setTiposArticulo] = useState(['Repuesto', 'Lubricante', 'Filtro', 'Químico', 'Accesorio', 'Batería', 'Caucho', 'Freno', 'Suspensión', 'Motor', 'Eléctrico', 'Transmisión', 'Servicio']);
+  const [colores, setColores] = useState(['No Aplica', 'Negro', 'Gris', 'Cromo', 'Rojo', 'Azul', 'Blanco', 'Ámbar']);
+  const [tallas, setTallas] = useState(['N/A', 'Estándar', '0.10', '0.20', '0.30', '0.40', '0.50', '20', '30', '40', '50', '60']);
   
   const [modalMarca, setModalMarca] = useState({ open: false, name: '' });
   const [modalGrupo, setModalGrupo] = useState({ open: false, name: '' });
@@ -312,19 +312,49 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     modalMap[type]({ open: false, name: '', code: '' });
   };
 
-  const buildProduct = () => {
-    if (!formData.description || !formData.internalCode) {
-      alert('Complete código de parte y descripción');
-      return null;
-    }
+  const handleDelete = (type: string, idOrValue: any) => {
+    if (!idOrValue || idOrValue === '0' || idOrValue === '') return;
+    
+    if (!confirm('¿Está seguro de eliminar este elemento?')) return;
 
+    const collections: any = {
+      marca: 'brands', grupo: 'groups', subgrupo: 'subgroups', linea: 'lines', proveedor: 'suppliers'
+    };
+    
+    const collection = collections[type];
+    if (collection) {
+      updateStore((prev: any) => ({
+        ...prev,
+        [collection]: (prev[collection] || []).filter((item: any) => item.id.toString() !== idOrValue.toString())
+      }));
+      
+      const fieldMap: any = {
+        marca: 'brandId', grupo: 'groupId', subgrupo: 'subgroupId', linea: 'lineId', proveedor: 'supplierId'
+      };
+      setFormData(prev => ({ ...prev, [fieldMap[type]]: 0 }));
+    } else {
+      // Para arrays locales estáticos
+      if (type === 'categoria') setTiposArticulo(prev => prev.filter(t => t !== idOrValue));
+      if (type === 'color') setColores(prev => prev.filter(c => c !== idOrValue));
+      if (type === 'talla') setTallas(prev => prev.filter(t => t !== idOrValue));
+      if (type === 'unidad') setUnidades(prev => prev.filter(u => u !== idOrValue));
+      
+      const fieldMap: any = {
+        categoria: 'type', color: 'color', talla: 'size', unidad: 'mainUnit'
+      };
+      setFormData(prev => ({ ...prev, [fieldMap[type]]: '' }));
+    }
+  };
+
+  const buildProduct = () => {
+    // Ya no hay campos obligatorios como descripción o código interno
     return {
       id: editingProduct?.id || Date.now(),
-      code: formData.internalCode,
+      code: formData.internalCode || 'SIN-CODIGO',
       barcode: formData.barcode,
       internalCode: formData.internalCode,
       alternateCode: formData.alternateCode,
-      name: formData.description,
+      name: formData.description || 'Producto sin descripción',
       description: formData.description,
       shortDescription: formData.shortDescription,
       type: formData.type,
@@ -421,9 +451,27 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           </SelectTrigger>
           <SelectContent>{props.options}</SelectContent>
         </Select>
-        <Button size="icon" variant="outline" onClick={props.onAdd} className="h-9 w-9 bg-white border-gray-300 shrink-0">
-          <Plus className="w-4 h-4" />
-        </Button>
+        <div className="flex gap-1 shrink-0">
+          <Button 
+            size="icon" 
+            variant="outline" 
+            onClick={props.onAdd} 
+            className="h-9 w-9 bg-white border-gray-300"
+            title="Agregar nuevo"
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
+          <Button 
+            size="icon" 
+            variant="outline" 
+            disabled={!props.value || props.value === '0' || props.value === ''}
+            onClick={() => props.onDelete && props.onDelete(props.value)} 
+            className="h-9 w-9 bg-white border-gray-300 hover:text-red-500 transition-colors"
+            title="Eliminar seleccionado"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -484,7 +532,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   
                   <div className="space-y-3">
                     <div className="space-y-1">
-                      <Label className="text-[10px] font-black uppercase text-black">Código de Parte (Interno) *</Label>
+                      <Label className="text-[10px] font-black uppercase text-black">Código de Parte (Interno)</Label>
                       <CleanInput 
                         value={formData.internalCode} 
                         onChange={(e: any) => setFormData(prev => ({ ...prev, internalCode: e.target.value }))}
@@ -506,7 +554,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Descripción Técnica Completa *</Label>
+                    <Label className="text-[10px] font-black uppercase text-black">Descripción Técnica Completa</Label>
                     <Textarea 
                       value={formData.description} 
                       onChange={(e: any) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -528,15 +576,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 </div>
 
                 <div className="grid grid-cols-3 gap-4 mb-3">
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Categoría de Artículo</Label>
-                    <Select value={formData.type} onValueChange={(v) => setFormData(prev => ({ ...prev, type: v }))}>
-                      <SelectTrigger className="h-9 bg-white rounded-lg text-sm border-gray-200">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>{tiposArticulo.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
+                  <SelectWithAdd 
+                    label="Categoría de Artículo"
+                    value={formData.type}
+                    onChange={(v: any) => setFormData(prev => ({ ...prev, type: v }))}
+                    options={tiposArticulo.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    onAdd={() => {
+                        const n = prompt("Nueva Categoría:");
+                        if(n) setTiposArticulo(prev => [...prev, n]);
+                    }}
+                    onDelete={(v: any) => handleDelete('categoria', v)}
+                  />
                   
                   <SelectWithAdd 
                     label="Familia / Grupo"
@@ -544,6 +594,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     onChange={(v: any) => setFormData(prev => ({ ...prev, groupId: parseInt(v) || 0, subgroupId: 0 }))}
                     options={(store.groups || [])?.map((g: any) => <SelectItem key={g.id} value={g.id.toString()}>{g.name}</SelectItem>)}
                     onAdd={() => setModalGrupo({ open: true, name: '' })}
+                    onDelete={(v: any) => handleDelete('grupo', v)}
                   />
                   
                   <SelectWithAdd 
@@ -552,6 +603,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     onChange={(v: any) => setFormData(prev => ({ ...prev, subgroupId: parseInt(v) || 0 }))}
                     options={filteredSubgroups?.map((s: any) => <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>)}
                     onAdd={() => setModalSubGrupo({ open: true, name: '' })}
+                    onDelete={(v: any) => handleDelete('subgrupo', v)}
                   />
                 </div>
 
@@ -562,6 +614,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     onChange={(v: any) => setFormData(prev => ({ ...prev, brandId: parseInt(v) || 0 }))}
                     options={(store.brands || [])?.map((b: any) => <SelectItem key={b.id} value={b.id.toString()}>{b.name}</SelectItem>)}
                     onAdd={() => setModalMarca({ open: true, name: '' })}
+                    onDelete={(v: any) => handleDelete('marca', v)}
                   />
                   
                   <SelectWithAdd 
@@ -570,6 +623,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     onChange={(v: any) => setFormData(prev => ({ ...prev, lineId: parseInt(v) || 0 }))}
                     options={(store.lines || [])?.map((l: any) => <SelectItem key={l.id} value={l.id.toString()}>{l.name}</SelectItem>)}
                     onAdd={() => setModalLinea({ open: true, name: '' })}
+                    onDelete={(v: any) => handleDelete('linea', v)}
                   />
                   
                   <div className="space-y-1">
@@ -584,25 +638,29 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 </div>
 
                 <div className="grid grid-cols-4 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Color / Acabado</Label>
-                    <Select value={formData.color} onValueChange={(v) => setFormData(prev => ({ ...prev, color: v }))}>
-                      <SelectTrigger className="h-9 bg-white rounded-lg text-sm border-gray-200">
-                        <SelectValue placeholder="Seleccione" />
-                      </SelectTrigger>
-                      <SelectContent>{colores.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
+                  <SelectWithAdd 
+                    label="Color / Acabado"
+                    value={formData.color}
+                    onChange={(v: any) => setFormData(prev => ({ ...prev, color: v }))}
+                    options={colores.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    onAdd={() => {
+                        const n = prompt("Nuevo Color:");
+                        if(n) setColores(prev => [...prev, n]);
+                    }}
+                    onDelete={(v: any) => handleDelete('color', v)}
+                  />
                   
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Medida / Talla / Grado</Label>
-                    <Select value={formData.size} onValueChange={(v) => setFormData(prev => ({ ...prev, size: v }))}>
-                      <SelectTrigger className="h-9 bg-white rounded-lg text-sm border-gray-200">
-                        <SelectValue placeholder="Seleccione" />
-                      </SelectTrigger>
-                      <SelectContent>{tallas.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
+                  <SelectWithAdd 
+                    label="Medida / Talla / Grado"
+                    value={formData.size}
+                    onChange={(v: any) => setFormData(prev => ({ ...prev, size: v }))}
+                    options={tallas.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    onAdd={() => {
+                        const n = prompt("Nueva Talla/Medida:");
+                        if(n) setTallas(prev => [...prev, n]);
+                    }}
+                    onDelete={(v: any) => handleDelete('talla', v)}
+                  />
                   
                   <SelectWithAdd 
                     label="Proveedor"
@@ -610,6 +668,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     onChange={(v: any) => setFormData(prev => ({ ...prev, supplierId: parseInt(v) || 0 }))}
                     options={(store.suppliers || [])?.map((s: any) => <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>)}
                     onAdd={() => setModalProveedor({ open: true, name: '', code: '' })}
+                    onDelete={(v: any) => handleDelete('proveedor', v)}
                   />
                   
                   <div className="space-y-1">
@@ -630,15 +689,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 </h3>
                 
                 <div className="grid grid-cols-3 gap-4 mb-3">
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-black">Unidad de Despacho</Label>
-                    <Select value={formData.mainUnit} onValueChange={(v) => setFormData(prev => ({ ...prev, mainUnit: v }))}>
-                      <SelectTrigger className="h-9 bg-white rounded-lg text-sm border-gray-200">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>{unidades.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
+                  <SelectWithAdd 
+                    label="Unidad de Despacho"
+                    value={formData.mainUnit}
+                    onChange={(v: any) => setFormData(prev => ({ ...prev, mainUnit: v }))}
+                    options={unidades.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                    onAdd={() => {
+                        const n = prompt("Nueva Unidad:");
+                        if(n) setUnidades(prev => [...prev, n]);
+                    }}
+                    onDelete={(v: any) => handleDelete('unidad', v)}
+                  />
                   
                   <div className="space-y-1">
                     <Label className="text-[10px] font-black uppercase text-black">Unidad de Compra (Empaque)</Label>
@@ -755,7 +816,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       <SelectTrigger className="h-9 bg-white rounded-lg text-sm border-gray-200">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>{tiposImpuesto.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                      <SelectContent>{['Gravado', 'Exento', 'No Aplica'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1">
@@ -986,7 +1047,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     <Check className="w-4 h-4 text-[#c9a227]" /> Confirmar Registro
                   </h3>
                   <p className="text-[10px] text-black text-center font-black uppercase">
-                    Verifique que los códigos de parte y precios sean correctos antes de guardar.
+                    Verifique los datos antes de guardar. Ningún campo es obligatorio.
                   </p>
                   <div className="flex gap-3">
                     <Button 
