@@ -27,7 +27,7 @@ export const UserForm: React.FC<UserFormProps> = ({ isOpen, onClose, updateStore
   });
 
   useEffect(() => {
-    if (editingUser) {
+    if (editingUser && isOpen) {
       setFormData({
         fullName: editingUser.fullName,
         username: editingUser.username,
@@ -35,7 +35,7 @@ export const UserForm: React.FC<UserFormProps> = ({ isOpen, onClose, updateStore
         role: editingUser.role,
         active: editingUser.active
       });
-    } else {
+    } else if (isOpen) {
       setFormData({
         fullName: '',
         username: '',
@@ -59,7 +59,7 @@ export const UserForm: React.FC<UserFormProps> = ({ isOpen, onClose, updateStore
     };
 
     updateStore((prev: any) => {
-      const users = [...prev.users];
+      const users = [...(prev.users || [])];
       if (editingUser) {
         const index = users.findIndex(u => u.id === editingUser.id);
         if (index !== -1) users[index] = userData;
